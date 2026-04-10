@@ -183,7 +183,7 @@ async function fetchArticlePreviewMetadata(articleUrl: string) {
       expiresAt: now + CACHE_TTL_MS,
     });
 
-    return {};
+    return { previewImageUrl: undefined, description: undefined };
   } finally {
     clearTimeout(timeoutId);
   }
