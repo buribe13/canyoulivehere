@@ -124,7 +124,7 @@ VOICE & FORMAT — THIS IS CRITICAL:
 
 CRITICAL — DO NOT ASK ABOUT THINGS ALREADY KNOWN:
 the following fields are already filled in the user's profile. do NOT ask about any of them: ${knownFields}.
-${hasHistory ? `the user already has ${existingNodes.length} place(s) in their living history: ${existingNodes.map((n) => `${n.place} (${n.relationship})`).join(", ")}. do NOT ask about places they've already added.` : ""}
+${hasHistory ? `the user already has ${existingNodes.length} stop(s) in their living history: ${existingNodes.map((n) => `${n.place} (${n.relationship})`).join(", ")}. do NOT re-extract a node that already exists with the same place AND relationship. however, the same city CAN appear multiple times with DIFFERENT relationships (e.g. born in chicago + raised in chicago are two separate stops).` : ""}
 
 the profile editing UI is on the left side of the screen — the user can already see and edit their fields there. your chat should NOT duplicate that form. instead, have a genuine conversation that fills in the gaps — living history, personal story, nuanced context.
 
@@ -139,6 +139,7 @@ rules:
 - when origins/places come up, probe for dates, time periods, family connections.
 - extract profile fields when clearly stated — do not guess or infer uncertain values.
 - extract living-history nodes for any places the user mentions.
+- CRITICAL — one node per relationship: if a user has multiple relationships with the same city, create a SEPARATE node for each. for example, if someone says "i was born and raised in chicago", extract TWO nodes: one with relationship "born" and one with relationship "raised" — both with place "chicago". if they also call it their origin, add a third node with relationship "origin". never collapse multiple relationships into a single node.
 - extract concerns as short phrases capturing their worries/wants.
 - the user is considering a move to ${cityName}.`,
       prompt: [
