@@ -2,108 +2,123 @@ import { generateText, Output } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { getCityBySlug } from "@/lib/cities";
-import type { ChatMessage, Mode, UserAnswers } from "@/lib/types";
+import type { ChatMessage, Mode } from "@/lib/types";
 
-const livingValues = ["alone", "roommates", "family"] as const;
-const transportValues = ["car", "transit", "hybrid"] as const;
-const foodValues = ["low", "medium", "high"] as const;
-const lifestyleValues = ["minimal", "balanced", "social", "premium"] as const;
-const priorityValues = ["neighborhood", "commute", "cost"] as const;
 const fluencyValues = ["learning", "conversational", "fluent"] as const;
 const backupValues = ["none", "some", "strong"] as const;
 const moveReasonValues = ["opportunity", "necessity", "caretaking"] as const;
+const ageBandValues = ["18-24", "25-34", "35-44", "45-54", "55+"] as const;
 
 const extractedAnswersSchema = z.object({
-  income: z.number().int().nonnegative().nullable(),
-  living: z.enum(livingValues).nullable(),
-  transport: z.enum(transportValues).nullable(),
-  food: z.enum(foodValues).nullable(),
-  lifestyle: z.enum(lifestyleValues).nullable(),
-  studentLoans: z.number().int().nonnegative().nullable(),
-  priority: z.enum(priorityValues).nullable(),
-  shouldSetStudentLoansToZero: z.boolean().nullable(),
   ethnicity: z.string().nullable(),
   languageFluency: z.enum(fluencyValues).nullable(),
   financialBackup: z.enum(backupValues).nullable(),
   moveReason: z.enum(moveReasonValues).nullable(),
   communityTies: z.string().nullable(),
+  ageBand: z.enum(ageBandValues).nullable(),
 });
+
+const documentSectionSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    body: z.string(),
+    tone: z.enum(["neutral", "positive", "caution"]).nullable(),
+  })
+  .nullable();
 
 const chatTurnSchema = z.object({
   assistantMessage: z.string().min(1),
   extractedAnswers: extractedAnswersSchema,
+  documentSection: documentSectionSchema,
 });
 
 type FieldKey =
-  | "income" | "living" | "transport" | "food" | "studentLoans" | "priority" | "lifestyle"
-  | "ethnicity" | "languageFluency" | "financialBackup" | "moveReason" | "communityTies";
+  | "ethnicity"
+  | "languageFluency"
+  | "financialBackup"
+  | "moveReason"
+  | "communityTies"
+  | "ageBand";
+
+interface ProfilePayload {
+  financial?: {
+    annualIncome?: number;
+    savings?: number;
+    monthlyDebt?: number;
+  };
+  lifestyle?: {
+    currentMonthlyCost?: number;
+    spendingHabit?: string;
+    housingPreference?: string;
+    workStyle?: string;
+  };
+  positionality?: {
+    financialBackup?: string;
+    languageFluency?: string;
+    moveReason?: string;
+  };
+  identity?: {
+    ethnicity?: string;
+    communityTies?: string;
+    ageBand?: string;
+  };
+}
 
 interface ChatTurnRequestBody {
   citySlug?: string;
   mode?: Mode;
-  answers?: Partial<UserAnswers>;
+  answers?: Record<string, unknown>;
   messages?: ChatMessage[];
+  benchmarkContext?: string;
+  profile?: ProfilePayload;
 }
 
-function getRequiredFields(mode: Mode): FieldKey[] {
-  const financial: FieldKey[] = mode === "starting-out"
-    ? ["income", "living", "transport", "food", "studentLoans", "lifestyle"]
-    : ["income", "living", "transport", "food", "priority", "lifestyle"];
-  const context: FieldKey[] = ["ethnicity", "languageFluency", "financialBackup", "moveReason", "communityTies"];
-  return [...financial, ...context];
+const CONTEXT_FIELDS: FieldKey[] = [
+  "ageBand",
+  "ethnicity",
+  "languageFluency",
+  "financialBackup",
+  "moveReason",
+  "communityTies",
+];
+
+function seedAnswersFromProfile(
+  profile: ProfilePayload,
+  current: Record<string, unknown>
+): Record<string, unknown> {
+  const seeded = { ...current };
+
+  if (profile.positionality?.financialBackup && !seeded.financialBackup) {
+    seeded.financialBackup = profile.positionality.financialBackup;
+  }
+  if (profile.positionality?.languageFluency && !seeded.languageFluency) {
+    seeded.languageFluency = profile.positionality.languageFluency;
+  }
+  if (profile.positionality?.moveReason && !seeded.moveReason) {
+    seeded.moveReason = profile.positionality.moveReason;
+  }
+  if (profile.identity?.ethnicity && !seeded.ethnicity) {
+    seeded.ethnicity = profile.identity.ethnicity;
+  }
+  if (profile.identity?.communityTies && !seeded.communityTies) {
+    seeded.communityTies = profile.identity.communityTies;
+  }
+  if (profile.identity?.ageBand && !seeded.ageBand) {
+    seeded.ageBand = profile.identity.ageBand;
+  }
+  return seeded;
 }
 
-function getMissingFields(mode: Mode, answers: Record<string, unknown>) {
-  return getRequiredFields(mode).filter((field) => {
+function getMissingFields(answers: Record<string, unknown>): FieldKey[] {
+  return CONTEXT_FIELDS.filter((field) => {
     const value = answers[field];
-    return value === undefined || value === null;
+    return value === undefined || value === null || value === "";
   });
 }
 
-function getOptionsForField(field: FieldKey | undefined, mode: Mode) {
+function getOptionsForField(field: FieldKey | undefined) {
   switch (field) {
-    case "living":
-      return mode === "starting-out"
-        ? [
-            { label: "Living alone", value: "alone" },
-            { label: "With roommates", value: "roommates" },
-          ]
-        : [
-            { label: "Living alone", value: "alone" },
-            { label: "With roommates", value: "roommates" },
-            { label: "With family", value: "family" },
-          ];
-    case "transport":
-      return [
-        { label: "Car", value: "car" },
-        { label: "Public transit", value: "transit" },
-        { label: "Mix of both", value: "hybrid" },
-      ];
-    case "food":
-      return [
-        { label: "Cooking mostly", value: "low" },
-        { label: "Balanced", value: "medium" },
-        { label: "Eating out often", value: "high" },
-      ];
-    case "priority":
-      return [
-        { label: "Neighborhood quality", value: "neighborhood" },
-        { label: "Short commute", value: "commute" },
-        { label: "Lower cost", value: "cost" },
-      ];
-    case "lifestyle":
-      return mode === "making-change"
-        ? [
-            { label: "Minimal", value: "minimal" },
-            { label: "Balanced", value: "balanced" },
-            { label: "Premium", value: "premium" },
-          ]
-        : [
-            { label: "Minimal", value: "minimal" },
-            { label: "Balanced", value: "balanced" },
-            { label: "Social", value: "social" },
-            { label: "Premium", value: "premium" },
-          ];
     case "languageFluency":
       return [
         { label: "Learning", value: "learning" },
@@ -122,40 +137,86 @@ function getOptionsForField(field: FieldKey | undefined, mode: Mode) {
         { label: "Necessity", value: "necessity" },
         { label: "Caretaking / family", value: "caretaking" },
       ];
+    case "ageBand":
+      return [
+        { label: "18-24", value: "18-24" },
+        { label: "25-34", value: "25-34" },
+        { label: "35-44", value: "35-44" },
+        { label: "45-54", value: "45-54" },
+        { label: "55+", value: "55+" },
+      ];
     default:
       return undefined;
   }
 }
 
 function mergeAnswers(
-  mode: Mode,
   current: Record<string, unknown>,
   extracted: z.infer<typeof extractedAnswersSchema>
 ): Record<string, unknown> {
-  const next: Record<string, unknown> = { ...current };
-
-  if (extracted.income !== null) next.income = extracted.income;
-  if (extracted.living !== null) next.living = extracted.living;
-  if (extracted.transport !== null) next.transport = extracted.transport;
-  if (extracted.food !== null) next.food = extracted.food;
-  if (extracted.lifestyle !== null) next.lifestyle = extracted.lifestyle;
-  if (extracted.studentLoans !== null) next.studentLoans = extracted.studentLoans;
-  if (extracted.priority !== null) next.priority = extracted.priority;
+  const next = { ...current };
   if (extracted.ethnicity !== null) next.ethnicity = extracted.ethnicity;
-  if (extracted.languageFluency !== null) next.languageFluency = extracted.languageFluency;
-  if (extracted.financialBackup !== null) next.financialBackup = extracted.financialBackup;
+  if (extracted.languageFluency !== null)
+    next.languageFluency = extracted.languageFluency;
+  if (extracted.financialBackup !== null)
+    next.financialBackup = extracted.financialBackup;
   if (extracted.moveReason !== null) next.moveReason = extracted.moveReason;
-  if (extracted.communityTies !== null) next.communityTies = extracted.communityTies;
+  if (extracted.communityTies !== null)
+    next.communityTies = extracted.communityTies;
+  if (extracted.ageBand !== null) next.ageBand = extracted.ageBand;
+  return next;
+}
 
-  if (
-    mode === "starting-out" &&
-    extracted.shouldSetStudentLoansToZero &&
-    next.studentLoans === undefined
-  ) {
-    next.studentLoans = 0;
+function formatCurrency(n: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+function buildProfileSummary(profile: ProfilePayload): string {
+  const lines: string[] = [];
+
+  const fin = profile.financial;
+  if (fin) {
+    lines.push(
+      `Financial profile (from user's saved profile — do NOT re-ask these):`,
+      `  Annual income: ${fin.annualIncome != null ? formatCurrency(fin.annualIncome) : "not set"}`,
+      `  Savings: ${fin.savings != null ? formatCurrency(fin.savings) : "not set"}`,
+      `  Monthly debt: ${fin.monthlyDebt != null ? formatCurrency(fin.monthlyDebt) + "/mo" : "not set"}`
+    );
   }
 
-  return next;
+  const ls = profile.lifestyle;
+  if (ls) {
+    lines.push(
+      `Lifestyle (from profile — do NOT re-ask):`,
+      `  Current monthly cost: ${ls.currentMonthlyCost != null ? formatCurrency(ls.currentMonthlyCost) + "/mo" : "not set"}`,
+      `  Spending habit: ${ls.spendingHabit ?? "not set"}`,
+      `  Housing preference: ${ls.housingPreference ?? "not set"}`,
+      `  Work style: ${ls.workStyle ?? "not set"}`
+    );
+  }
+
+  const pos = profile.positionality;
+  if (pos) {
+    lines.push(
+      `Positionality (from profile — already known, but confirm or refine in conversation):`,
+      `  Financial backup: ${pos.financialBackup ?? "not set"}`,
+      `  Language fluency: ${pos.languageFluency ?? "not set"}`,
+      `  Move reason: ${pos.moveReason ?? "not set"}`
+    );
+  }
+
+  const id = profile.identity;
+  if (id) {
+    if (id.ethnicity) lines.push(`  Ethnicity: ${id.ethnicity}`);
+    if (id.communityTies) lines.push(`  Community ties: ${id.communityTies}`);
+    if (id.ageBand) lines.push(`  Age band: ${id.ageBand}`);
+  }
+
+  return lines.join("\n");
 }
 
 export async function POST(request: Request) {
@@ -167,8 +228,10 @@ export async function POST(request: Request) {
     const body = (await request.json()) as ChatTurnRequestBody;
     const citySlug = body.citySlug;
     const mode = body.mode;
-    const answers = body.answers ?? {};
+    const rawAnswers = body.answers ?? {};
     const messages = body.messages ?? [];
+    const benchmarkContext = body.benchmarkContext ?? "";
+    const profilePayload = body.profile ?? {};
 
     if (!citySlug || !mode) {
       return Response.json(
@@ -182,57 +245,70 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unknown city" }, { status: 404 });
     }
 
-    const requiredFields = getRequiredFields(mode);
-    const missingFields = getMissingFields(mode, answers);
+    const answers = seedAnswersFromProfile(profilePayload, rawAnswers);
+    const missingFields = getMissingFields(answers);
+    const profileSummary = buildProfileSummary(profilePayload);
+
+    const alreadyKnown = CONTEXT_FIELDS
+      .filter((f) => !missingFields.includes(f))
+      .join(", ");
 
     const { output } = await generateText({
       model: openai("gpt-5.4-mini"),
       output: Output.object({ schema: chatTurnSchema }),
-      system: `You are the chat intake assistant for "Can You Live Here?", a dark minimal cost-of-living app. Your job is to collect the user's moving-plan inputs conversationally, one question at a time, for ${city.name}. The plan covers financial profile, personal context, and positionality.
+      system: `You are the moving-plan advisor for "Can You Live Here?", a cost-of-living planning app. The user already has a full financial and lifestyle profile saved in the app — you do NOT need to collect income, savings, debt, housing preference, food, transport, or lifestyle spending. That data is provided to you below.
+
+Your job is to help the user BUILD A USEFUL MOVING PLAN by iterating on concerns, trade-offs, and actionable steps. Think of yourself as a thoughtful friend who has done the research.
+
+CRITICAL — NEVER ASK ABOUT ANYTHING ALREADY KNOWN:
+- Financial data (income, savings, debt, housing, food, transport, lifestyle, monthly cost, work style) is ALWAYS in the profile. Never ask.
+- These context fields are ALREADY KNOWN from the profile: ${alreadyKnown || "none yet"}. Do NOT ask about any of them.
+${missingFields.length > 0 ? `- The ONLY fields still missing: ${missingFields.join(", ")}. You may ask about ONE of these per turn, naturally woven into conversation.` : "- ALL fields are filled. Do not collect any more data. Focus entirely on planning."}
+
+Once context fields are filled (or from the start if they're already known), focus the conversation on:
+1. Financial reality check — use their profile numbers and the benchmark data to explain how their finances compare to peers their age, race/ethnicity, and income level in ${city.name}. Be specific with numbers.
+2. Community contribution — how can they be a positive addition to the community rather than contributing to displacement? What local businesses, organizations, or neighborhoods should they support?
+3. Displacement awareness — what neighborhoods are under pressure? What history should they understand?
+4. Practical planning — first-month costs, savings runway, what to do before the move, what to do in the first 90 days.
+5. Risk flags — be honest about financial stretch, lack of safety net, or language barriers.
+
+${profileSummary}
+
+${benchmarkContext ? `Peer benchmark context:\n${benchmarkContext}` : ""}
+
+Opening turn (when conversation is empty):
+- Do NOT ask for income or any financial data. You already have it.
+- Open with a brief, warm budgeting hook using their real numbers: "Let's build your moving plan for ${city.name}. Based on your profile, you're working with about ${formatCurrency((profilePayload.financial?.annualIncome ?? 0) / 12)}/mo before taxes — let's figure out how that plays out here. What part of the budget are you most worried about?"
+- Keep it to 2-3 sentences. Reference one concrete number from their profile so it feels personalized, then hand the conversation to them.
+- If context fields are missing, you can weave ONE question in naturally — but keep the focus on budgeting and planning.
 
 Rules:
-- Keep the assistant message to 1-2 short paragraphs, plain text only.
-- Sound natural, warm, and culturally aware — not robotic.
-- Ask for only one missing field at a time.
-- If the latest user message clearly answers a field, extract it.
-- Start with financial fields, then move to personal context and positionality.
-
-Financial fields:
-- Income is annual USD.
-- Student loans are a monthly USD payment; set to zero only when the user clearly says they have none.
-- Allowed living values: alone, roommates${mode === "making-change" ? ", family" : ""}.
-- Allowed transport values: car, transit, hybrid.
-- Allowed food values: low, medium, high.
-- Allowed lifestyle values: ${mode === "making-change" ? "minimal, balanced, premium" : "minimal, balanced, social, premium"}.
-- Allowed priority values for making-change mode: neighborhood, commute, cost.
-
-Personal & positionality fields:
-- ethnicity: freeform string — the user's racial or ethnic background.
-- languageFluency: learning, conversational, or fluent — their English proficiency.
-- financialBackup: none, some, or strong — whether they have a safety net.
-- moveReason: opportunity, necessity, or caretaking — why they are moving.
-- communityTies: freeform string — any connections they already have in ${city.name}.
-
-- Do not ask multiple questions in one turn.
-- When asking about ethnicity or language, be respectful and explain why it matters (local cultural communities, resources, representation).
-- If all required fields are collected, say you have everything needed to build their plan.`,
+- Keep messages to 1-3 short paragraphs, plain text only.
+- Be warm, honest, and culturally aware. Do not sugarcoat financial risk.
+- When you have enough context to make a substantive observation, generate a documentSection (id like "chat-financial-reality", "chat-community-plan", etc.) for the user's downloadable moving plan.
+- Set documentSection to null if this turn is just collecting a field or having a brief exchange.
+- After all context fields are filled, every response should add value to the plan — compare numbers, suggest actions, flag risks, or discuss community dynamics.
+- If the user asks questions or raises concerns, address them directly using the profile data and benchmarks.`,
       prompt: [
         `City: ${city.name}`,
-        `Mode: ${mode === "starting-out" ? "Starting out" : "Making a change"}`,
-        `Required fields: ${requiredFields.join(", ")}`,
-        `Current answers: ${JSON.stringify(answers)}`,
-        `Missing fields before this turn: ${missingFields.join(", ") || "none"}`,
-        `Conversation: ${JSON.stringify(
-          messages.slice(-10).map((message) => ({
-            role: message.role,
-            content: message.content,
+        messages.length === 0
+          ? `THIS IS THE OPENING TURN — no user message yet. Open with a short budgeting-focused welcome that references their real monthly income and invites them to explore how their budget works in ${city.name}. Do NOT ask for income — you already have it. Keep it to 2-3 sentences.`
+          : null,
+        `Context fields still missing: ${missingFields.join(", ") || "none — focus on planning"}`,
+        `Current context answers: ${JSON.stringify(answers)}`,
+        `Conversation (last 12 messages): ${JSON.stringify(
+          messages.slice(-12).map((m) => ({
+            role: m.role,
+            content: m.content,
           }))
         )}`,
-      ].join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
     });
 
-    const mergedAnswers = mergeAnswers(mode, answers, output.extractedAnswers);
-    const remainingFields = getMissingFields(mode, mergedAnswers);
+    const mergedAnswers = mergeAnswers(answers, output.extractedAnswers);
+    const remainingFields = getMissingFields(mergedAnswers);
     const complete = remainingFields.length === 0;
     const nextField = remainingFields[0];
 
@@ -240,12 +316,13 @@ Personal & positionality fields:
       assistantMessage: output.assistantMessage.trim(),
       answers: mergedAnswers,
       complete,
-      options: getOptionsForField(nextField, mode),
+      options: getOptionsForField(nextField),
       inputType: complete ? null : "text",
       step: complete
-        ? requiredFields.length
-        : requiredFields.length - remainingFields.length + 1,
-      totalSteps: requiredFields.length,
+        ? CONTEXT_FIELDS.length
+        : CONTEXT_FIELDS.length - remainingFields.length + 1,
+      totalSteps: CONTEXT_FIELDS.length,
+      documentSection: output.documentSection ?? null,
     });
   } catch (error) {
     console.error("Failed to process AI chat intake", error);

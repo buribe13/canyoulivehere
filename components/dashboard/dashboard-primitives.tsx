@@ -60,11 +60,11 @@ export function MetricGrid({ items }: { items: MetricItem[] }) {
 
 export function PillRow({ items }: { items: string[] }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1">
       {items.map((item) => (
         <span
           key={item}
-          className="inline-flex h-7 items-center rounded-md border border-border bg-[rgba(255,255,255,0.02)] px-2 text-caption text-ink-light"
+          className="inline-flex items-center rounded-full bg-[rgba(255,255,255,0.06)] px-2.5 py-1 text-[12px] leading-[16px] text-ink-secondary"
         >
           {item}
         </span>

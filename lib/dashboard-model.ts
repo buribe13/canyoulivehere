@@ -4,6 +4,7 @@ import type {
   CityDashboardSummary,
   CityDossier,
   DashboardProfile,
+  LiveContentTopic,
   MetricItem,
   SpendingHabit,
   WorkStyle,
@@ -100,6 +101,40 @@ function toneForDelta(delta: number): MetricItem["tone"] {
   return "neutral";
 }
 
+function budgetBandForUser(realityGap: number, savingsRunwayMonths: number) {
+  if (realityGap < 0 || savingsRunwayMonths < 2.5) return "stretch" as const;
+  if (realityGap < 12000 || savingsRunwayMonths < 5) return "steady" as const;
+  return "flexible" as const;
+}
+
+function formatList(items: string[]) {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
+}
+
+function matchCommunitySignals(profile: DashboardProfile, signals: string[]) {
+  const haystack = [
+    profile.identity.ethnicity,
+    profile.identity.communityTies,
+    profile.positionality.languageFluency,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return signals.filter((signal) => haystack.includes(signal.toLowerCase()));
+}
+
+function createTopic(
+  id: string,
+  title: string,
+  description: string,
+  query: string
+): LiveContentTopic {
+  return { id, title, description, query };
+}
+
 export function buildDashboardSummary({
   citySlug,
   dossier,
@@ -182,6 +217,172 @@ export function buildDashboardSummary({
       96
     )
   );
+
+  const userBudgetBand = budgetBandForUser(realityGap, savingsRunwayMonths);
+  const neighborhoodMatches = dossier.neighborhoods.map((item) => {
+    let score = 50;
+    const reasons: string[] = [];
+
+    if (item.fitProfile.housingFits.includes(profile.lifestyle.housingPreference)) {
+      score += 12;
+      reasons.push(
+        `${item.name} is a better fit for a ${profile.lifestyle.housingPreference} setup.`
+      );
+    }
+
+    if (item.fitProfile.workStyleFits.includes(profile.lifestyle.workStyle)) {
+      score += 10;
+      reasons.push(
+        `${item.fitProfile.vibe} matches a ${profile.lifestyle.workStyle.replace("-", " ")} work rhythm.`
+      );
+    }
+
+    if (item.fitProfile.moveReasonFits.includes(profile.positionality.moveReason)) {
+      score += 8;
+      reasons.push(
+        `Its neighborhood logic lines up with moving for ${profile.positionality.moveReason}.`
+      );
+    }
+
+    if (item.fitProfile.budgetBand === userBudgetBand) {
+      score += 12;
+      reasons.push(
+        `Its price pressure looks more compatible with your current landing margin.`
+      );
+    } else if (
+      userBudgetBand === "stretch" &&
+      item.fitProfile.budgetBand === "steady"
+    ) {
+      score += 8;
+      reasons.push(`It gives you more breathing room than the highest-pressure picks.`);
+    } else if (
+      userBudgetBand === "flexible" &&
+      item.fitProfile.budgetBand === "stretch"
+    ) {
+      score += 4;
+    } else {
+      score -= 6;
+    }
+
+    const communityMatches = matchCommunitySignals(profile, item.fitProfile.communitySignals);
+    if (communityMatches.length > 0) {
+      score += 12;
+      reasons.push(
+        `It has stronger signals for ${formatList(communityMatches.slice(0, 2))}.`
+      );
+    } else if (
+      profile.positionality.languageFluency !== "fluent" &&
+      item.languages.length > 1
+    ) {
+      score += 6;
+      reasons.push(
+        `Its multilingual infrastructure could make the landing phase easier.`
+      );
+    }
+
+    if (item.pressure === "High") {
+      score -= profile.positionality.financialBackup === "strong" ? 4 : 8;
+    } else if (item.pressure === "Low") {
+      score += 4;
+    }
+
+    return {
+      item,
+      score: Math.round(clamp(score, 24, 96)),
+      reasons,
+    };
+  });
+
+  const recommendedNeighborhood =
+    neighborhoodMatches.sort((a, b) => b.score - a.score)[0] ?? null;
+
+  if (!recommendedNeighborhood) {
+    throw new Error(`No neighborhoods available for ${citySlug}`);
+  }
+
+  const recommendedTopics = [
+    createTopic(
+      "history",
+      `${recommendedNeighborhood.item.name} history`,
+      "Recent reporting and background on the neighborhood's past and long-term civic context.",
+      recommendedNeighborhood.item.articleQueries.history
+    ),
+    createTopic(
+      "development",
+      "Development and housing pressure",
+      "Coverage of rezonings, housing, investment, and displacement pressure tied to this neighborhood.",
+      recommendedNeighborhood.item.articleQueries.development
+    ),
+    createTopic(
+      "current-events",
+      "Current neighborhood updates",
+      "Fresh local reporting on issues, organizing, and near-term change in the area.",
+      recommendedNeighborhood.item.articleQueries.currentEvents
+    ),
+  ];
+
+  const consciousTopics = [
+    createTopic(
+      "tenant-rights",
+      "Tenant rights and housing pressure",
+      "Read up on local tenant protections, neighborhood pressure, and housing politics before you move.",
+      `"${city.name}" tenant rights housing pressure ${recommendedNeighborhood.item.name}`
+    ),
+    createTopic(
+      "community-accountability",
+      "Community accountability",
+      "Reporting on community organizations, preservation fights, and local accountability around neighborhood change.",
+      `"${city.name}" ${recommendedNeighborhood.item.name} community organization neighborhood change`
+    ),
+    createTopic(
+      "belonging",
+      "Belonging and adaptation",
+      "Resources that can help you understand how to enter the city with more local context and less drift.",
+      `"${city.name}" local community guide cultural resources ${profile.identity.communityTies || recommendedNeighborhood.item.name}`
+    ),
+  ];
+
+  const resourceTopics = [
+    createTopic(
+      "political-events",
+      "Political events",
+      "Local politics, council decisions, and policy fights shaping daily life in the city.",
+      `"${city.name}" city council housing policy local politics`
+    ),
+    createTopic(
+      "community",
+      "Community and organizing",
+      "Coverage of neighborhood groups, mutual aid, and civic organizing with real local context.",
+      `"${city.name}" community organizing neighborhood news ${recommendedNeighborhood.item.name}`
+    ),
+    createTopic(
+      "socials",
+      "Social and public life",
+      "Stories about public life, cultural happenings, and the city's social rhythm beyond tourist framing.",
+      `"${city.name}" arts culture community events`
+    ),
+    createTopic(
+      "rising-figures",
+      "Rising figures",
+      "Reporting on organizers, artists, business owners, and public voices shaping the city right now.",
+      `"${city.name}" local organizer artist community leader profile`
+    ),
+  ];
+
+  const improvementLevers = [
+    realityGap < 0
+      ? "Widen your timeline or lower fixed housing costs before treating the move as settled."
+      : "Protect the margin you have now by choosing a neighborhood that does not erase it on day one.",
+    profile.positionality.financialBackup === "none"
+      ? "Build more backup before signing a lease so a surprise fee or broker cost does not force bad tradeoffs."
+      : "Keep your safety net visible in the plan instead of spending to your maximum rent tolerance.",
+    profile.positionality.languageFluency === "learning"
+      ? "Invest early in language access and local context so convenience does not become your only guide."
+      : "Use your existing fluency or community knowledge to build real local relationships, not just easier consumption.",
+    recommendedNeighborhood.item.pressure === "High"
+      ? `Study ${recommendedNeighborhood.item.name}'s pressure history before deciding that access alone makes it the right fit.`
+      : `Use ${recommendedNeighborhood.item.name} as a starting point, but compare it against at least one nearby neighborhood before committing.`,
+  ];
 
   const translatedDelta = Math.round(monthlyCost - profile.lifestyle.currentMonthlyCost);
   const financialNarrative =
@@ -269,6 +470,18 @@ export function buildDashboardSummary({
       historicalContext: dossier.historicalContext,
       languageAccess: dossier.languageAccess,
       neighborhoods: dossier.neighborhoods,
+      recommendedNeighborhood: {
+        name: recommendedNeighborhood.item.name,
+        score: recommendedNeighborhood.score,
+        reason: `${recommendedNeighborhood.item.name} is the strongest current match because ${recommendedNeighborhood.reasons
+          .slice(0, 2)
+          .join(" ")}`,
+        matchReasons: recommendedNeighborhood.reasons.slice(0, 3),
+        caution: recommendedNeighborhood.item.fitProfile.caution,
+        vibe: recommendedNeighborhood.item.fitProfile.vibe,
+        mapView: recommendedNeighborhood.item.mapView,
+        topics: recommendedTopics,
+      },
     },
     displacement: {
       title: "Displacement and neighborhood change",
@@ -282,6 +495,7 @@ export function buildDashboardSummary({
       narrative:
         "A move lands better when logistics and belonging are planned together. These are starting points, not substitutes for local relationships.",
       items: dossier.resources,
+      topics: resourceTopics,
     },
     consciousMove: {
       title: "Conscious move score",
@@ -303,6 +517,45 @@ export function buildDashboardSummary({
         "Which neighborhood relationships should come before a lease decision?",
         "Are you moving into pressure because it is convenient, or because it truly matches your needs?",
       ],
+      breakdown: [
+        {
+          label: "Financial margin",
+          score: Math.round(financialScore),
+          tone: financialScore >= 70 ? "positive" : financialScore >= 55 ? "neutral" : "caution",
+          detail: `Your current income covers about ${Math.round(financialScore)}% of the comfort target for ${city.shortName}.`,
+        },
+        {
+          label: "Landing runway",
+          score: Math.round(runwayScore),
+          tone: runwayScore >= 70 ? "positive" : runwayScore >= 55 ? "neutral" : "caution",
+          detail: `Savings translate to about ${formatMonths(savingsRunwayMonths)} of landing runway.`,
+        },
+        {
+          label: "Language and local adaptation",
+          score: Math.round(languageScore),
+          tone: languageScore >= 75 ? "positive" : languageScore >= 60 ? "neutral" : "caution",
+          detail: `Language fluency shapes how much hidden labor the move may ask of you day to day.`,
+        },
+        {
+          label: "Safety net",
+          score: Math.round(backupScore),
+          tone: backupScore >= 75 ? "positive" : backupScore >= 60 ? "neutral" : "caution",
+          detail: `Backup changes how much pressure an up-front fee, delay, or bad lease puts on the move.`,
+        },
+        {
+          label: "Neighborhood pressure exposure",
+          score: Math.round(clamp(100 - pressurePenalty * 8, 24, 100)),
+          tone:
+            pressurePenalty <= 4
+              ? "positive"
+              : pressurePenalty <= 8
+                ? "neutral"
+                : "caution",
+          detail: `${recommendedNeighborhood.item.name} is the current best fit, but ${dossier.neighborhoods.filter((item) => item.pressure === "High").length} highlighted neighborhoods still sit under high pressure.`,
+        },
+      ],
+      improvementLevers,
+      topics: consciousTopics,
     },
   };
 }

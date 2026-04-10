@@ -58,7 +58,7 @@ function ResourcesIcon() {
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Get Started", icon: GetStartedIcon },
   { href: "/dashboard/profile", label: "Profile", icon: ProfileIcon },
-  { href: "/dashboard/chat", label: "Chat", icon: ChatIcon },
+  { href: "/dashboard/chat", label: "Plan", icon: ChatIcon },
   { href: "/dashboard/neighborhoods", label: "Neighborhood History", icon: NeighborhoodIcon },
   { href: "/dashboard/conscious-move", label: "Conscious Score", icon: ConsciousIcon },
   { href: "/dashboard/resources", label: "Resources", icon: ResourcesIcon },

@@ -9,7 +9,7 @@ export default function SummaryGuard({
 }: {
   children: (summary: CityDashboardSummary) => React.ReactNode;
 }) {
-  const { summary, summaryStatus, aiEnhanced } = useDashboard();
+  const { summary, summaryStatus } = useDashboard();
 
   if (summaryStatus === "loading" && !summary) {
     return (
@@ -29,14 +29,5 @@ export default function SummaryGuard({
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="inline-flex h-6 items-center rounded-md border border-border px-2 text-caption text-ink-muted">
-          {aiEnhanced ? "AI-enhanced" : "Curated data"}
-        </span>
-      </div>
-      {children(summary)}
-    </div>
-  );
+  return <>{children(summary)}</>;
 }

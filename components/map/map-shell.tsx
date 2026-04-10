@@ -10,6 +10,12 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
 
 interface MapShellProps {
   citySlug?: string | null;
+  focusPreset?: {
+    center: [lng: number, lat: number];
+    zoom: number;
+    bearing?: number;
+    pitch?: number;
+  } | null;
 }
 
 function hideLabels(map: mapboxgl.Map) {
@@ -21,7 +27,7 @@ function hideLabels(map: mapboxgl.Map) {
   }
 }
 
-export default function MapShell({ citySlug }: MapShellProps) {
+export default function MapShell({ citySlug, focusPreset }: MapShellProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
 
@@ -64,7 +70,7 @@ export default function MapShell({ citySlug }: MapShellProps) {
     if (!map) return;
 
     const city = citySlug ? getCityBySlug(citySlug) : undefined;
-    const target = city?.mapView ?? INITIAL_MAP_PRESET;
+    const target = focusPreset ?? city?.mapView ?? INITIAL_MAP_PRESET;
 
     map.flyTo({
       center: target.center,
@@ -74,7 +80,7 @@ export default function MapShell({ citySlug }: MapShellProps) {
       duration: 1800,
       essential: true,
     });
-  }, [citySlug]);
+  }, [citySlug, focusPreset]);
 
   if (!MAPBOX_TOKEN) {
     return (

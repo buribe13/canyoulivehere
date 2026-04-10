@@ -2,18 +2,34 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useDashboard } from "@/components/dashboard/dashboard-provider";
 
-const SUGGESTIONS = [
-  ["To Los Angeles", "Boston history", "West Coast displacement"],
-  ["Programs for Gen Z", "NYC transit expenses"],
+interface Suggestion {
+  label: string;
+  citySlug?: string;
+}
+
+const SUGGESTIONS: Suggestion[][] = [
+  [
+    { label: "To Los Angeles", citySlug: "los-angeles" },
+    { label: "Boston history", citySlug: "boston" },
+    { label: "West Coast displacement" },
+  ],
+  [
+    { label: "Programs for Gen Z" },
+    { label: "NYC transit expenses", citySlug: "new-york" },
+  ],
 ];
 
 export default function GetStartedPage() {
   const router = useRouter();
+  const { setCitySlug } = useDashboard();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function go(prompt?: string) {
+  function go(prompt?: string, citySlug?: string) {
+    if (citySlug) setCitySlug(citySlug);
+
     const text = (prompt ?? inputValue).trim();
     if (text) {
       router.push(`/dashboard/chat?prompt=${encodeURIComponent(text)}`);
@@ -55,7 +71,7 @@ export default function GetStartedPage() {
             e.preventDefault();
             go();
           }}
-          className="flex flex-1 items-center gap-2 rounded-3xl border border-ink-muted px-4"
+          className="flex flex-1 items-center gap-2 rounded-3xl bg-bg px-4 py-3"
         >
           <input
             ref={inputRef}
@@ -63,7 +79,8 @@ export default function GetStartedPage() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Start your moving plan..."
-            className="flex-1 bg-transparent py-3 text-body text-ink placeholder:text-ink-muted outline-none"
+            autoFocus
+            className="flex-1 bg-transparent text-body text-ink placeholder:text-ink-muted outline-none"
           />
           <button
             type="submit"
@@ -89,14 +106,14 @@ export default function GetStartedPage() {
       <div className="flex flex-col items-center gap-3">
         {SUGGESTIONS.map((row, i) => (
           <div key={i} className="flex gap-3">
-            {row.map((label) => (
+            {row.map((s) => (
               <button
-                key={label}
+                key={s.label}
                 type="button"
-                onClick={() => go(label)}
-                className="rounded-3xl bg-surface px-2 py-1.5 text-pill text-ink transition-[opacity,transform] duration-150 ease-out hover:opacity-80 active:scale-[0.96]"
+                onClick={() => go(s.label, s.citySlug)}
+                className="rounded-3xl bg-bg/60 px-3 py-2 text-pill text-ink backdrop-blur-md transition-[opacity,transform] duration-150 ease-out hover:opacity-80 active:scale-[0.96]"
               >
-                {label}
+                {s.label}
               </button>
             ))}
           </div>

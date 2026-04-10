@@ -8,6 +8,11 @@ export type DashboardSection =
   | "conscious-move"
   | "resources";
 
+export type DashboardAgentPage =
+  | "neighborhoods"
+  | "conscious-move"
+  | "resources";
+
 export interface MapViewPreset {
   center: [lng: number, lat: number];
   zoom: number;
@@ -123,10 +128,56 @@ export interface PositionalityProfile {
   moveReason: MoveReason;
 }
 
+export type AgeBand = "18-24" | "25-34" | "35-44" | "45-54" | "55+";
+
+export interface IdentityProfile {
+  ethnicity: string;
+  communityTies: string;
+  ageBand?: AgeBand;
+}
+
 export interface DashboardProfile {
   financial: UserFinancialProfile;
   lifestyle: LifestyleSnapshot;
   positionality: PositionalityProfile;
+  identity: IdentityProfile;
+}
+
+/* ── Living history ────────────────────────────────────── */
+export type PlaceRelationship =
+  | "origin"
+  | "born"
+  | "raised"
+  | "moved-to"
+  | "family-root"
+  | "studied"
+  | "worked";
+
+export interface LivingHistoryNode {
+  id: string;
+  place: string;
+  relationship: PlaceRelationship;
+  dateOfBirth?: string;
+  startYear?: number;
+  endYear?: number | null;
+  historicalContext?: string;
+  parentId?: string | null;
+}
+
+export interface LivingHistory {
+  nodes: LivingHistoryNode[];
+}
+
+/* ── Profile chat ──────────────────────────────────────── */
+export interface ProfileChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ProfileChatState {
+  messages: ProfileChatMessage[];
+  concerns: string[];
 }
 
 export interface DashboardSession {
@@ -177,6 +228,56 @@ export interface NeighborhoodContextCard {
   narrative: string;
   languages: string[];
   anchors: string[];
+  coordinates: [lng: number, lat: number];
+  mapView: MapViewPreset;
+  fitProfile: {
+    housingFits: HousingPreference[];
+    workStyleFits: WorkStyle[];
+    moveReasonFits: MoveReason[];
+    budgetBand: "stretch" | "steady" | "flexible";
+    communitySignals: string[];
+    vibe: string;
+    caution: string;
+  };
+  articleQueries: {
+    history: string;
+    development: string;
+    currentEvents: string;
+  };
+}
+
+export interface LiveContentTopic {
+  id: string;
+  title: string;
+  description: string;
+  query: string;
+}
+
+export interface LiveContentArticle {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt?: string;
+  description?: string;
+  previewImageUrl?: string;
+}
+
+export interface LiveContentSection {
+  id: string;
+  title: string;
+  description: string;
+  articles: LiveContentArticle[];
+}
+
+export interface NeighborhoodRecommendation {
+  name: string;
+  score: number;
+  reason: string;
+  matchReasons: string[];
+  caution: string;
+  vibe: string;
+  mapView: MapViewPreset;
+  topics: LiveContentTopic[];
 }
 
 export interface CulturalNeighborhoodSummary {
@@ -185,6 +286,7 @@ export interface CulturalNeighborhoodSummary {
   historicalContext: string;
   languageAccess: string;
   neighborhoods: NeighborhoodContextCard[];
+  recommendedNeighborhood: NeighborhoodRecommendation;
 }
 
 export interface DisplacementTimelineEvent {
@@ -211,6 +313,14 @@ export interface ResourcesSummary {
   title: string;
   narrative: string;
   items: ResourceItem[];
+  topics: LiveContentTopic[];
+}
+
+export interface ConsciousMoveBreakdownItem {
+  label: string;
+  score: number;
+  tone: "positive" | "neutral" | "caution";
+  detail: string;
 }
 
 export interface ConsciousMoveSummary {
@@ -221,6 +331,9 @@ export interface ConsciousMoveSummary {
   narrative: string;
   drivers: string[];
   prompts: string[];
+  breakdown: ConsciousMoveBreakdownItem[];
+  improvementLevers: string[];
+  topics: LiveContentTopic[];
 }
 
 export interface CityDashboardSummary {
@@ -275,4 +388,52 @@ export interface ContributionItem {
   id: string;
   title: string;
   description: string;
+}
+
+/* ── Move-plan chat + document ─────────────────────────── */
+export interface MovePlanMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface PageAgentState {
+  messages: MovePlanMessage[];
+}
+
+export type PageAgentMapFocusSource = DashboardAgentPage | "city";
+
+export interface DashboardMapFocus {
+  label: string;
+  preset: MapViewPreset;
+  neighborhoodName?: string;
+  source: PageAgentMapFocusSource;
+}
+
+export interface DocumentSection {
+  id: string;
+  title: string;
+  body: string;
+  tone?: "neutral" | "positive" | "caution";
+}
+
+export interface MovePlanState {
+  messages: MovePlanMessage[];
+  answers: Record<string, unknown>;
+  complete: boolean;
+  documentSections: DocumentSection[];
+}
+
+/* ── Peer benchmarks ──────────────────────────────────── */
+export interface PeerBenchmark {
+  medianIncome: number;
+  medianRent: number;
+  rentBurdenPct: number;
+  cohortLabel: string;
+}
+
+export interface CityBenchmarkData {
+  byAgeBand: Record<AgeBand, { medianIncome: number }>;
+  byRaceEthnicity: Record<string, { medianIncome: number; populationPct: number }>;
+  overall: { medianIncome: number; medianRent: number };
 }

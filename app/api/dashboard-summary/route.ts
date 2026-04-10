@@ -23,11 +23,31 @@ const profileSchema = z.object({
     languageFluency: z.enum(["learning", "conversational", "fluent"]),
     moveReason: z.enum(["opportunity", "necessity", "caretaking"]),
   }),
+  identity: z
+    .object({
+      ethnicity: z.string().optional(),
+      communityTies: z.string().optional(),
+    })
+    .optional(),
+});
+
+const livingHistoryNodeSchema = z.object({
+  id: z.string(),
+  place: z.string(),
+  relationship: z.string(),
+  dateOfBirth: z.string().optional(),
+  startYear: z.number().int().optional(),
+  endYear: z.number().int().nullable().optional(),
+  historicalContext: z.string().optional(),
+  parentId: z.string().nullable().optional(),
 });
 
 const requestSchema = z.object({
   citySlug: z.string().min(1),
   profile: profileSchema,
+  livingHistory: z
+    .object({ nodes: z.array(livingHistoryNodeSchema) })
+    .optional(),
 });
 
 const aiSchema = z.object({
@@ -47,7 +67,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { citySlug, profile } = parsed.data;
+    const { citySlug, profile, livingHistory } = parsed.data;
     const city = getCityBySlug(citySlug);
     const dossier = getCityDossier(citySlug);
     const costData = await loadCityCostData(citySlug);
@@ -56,10 +76,18 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unknown city" }, { status: 404 });
     }
 
+    const fullProfile = {
+      ...profile,
+      identity: {
+        ethnicity: profile.identity?.ethnicity ?? "",
+        communityTies: profile.identity?.communityTies ?? "",
+      },
+    };
+
     const summary = buildDashboardSummary({
       citySlug,
       dossier,
-      profile,
+      profile: fullProfile,
       costData,
     });
 
@@ -67,16 +95,33 @@ export async function POST(request: Request) {
       return Response.json({ summary, aiEnhanced: false });
     }
 
+    const historyContext =
+      livingHistory?.nodes?.length
+        ? `Living history: ${livingHistory.nodes
+            .map(
+              (n) =>
+                `${n.place} (${n.relationship}${n.startYear ? `, ${n.startYear}` : ""}${n.endYear ? `–${n.endYear}` : ""}${n.historicalContext ? `, ${n.historicalContext}` : ""})`
+            )
+            .join("; ")}`
+        : "";
+
+    const identityContext =
+      profile.identity?.ethnicity || profile.identity?.communityTies
+        ? `Identity: ${[profile.identity.ethnicity, profile.identity.communityTies].filter(Boolean).join(", ")}`
+        : "";
+
     const { object } = await generateObject({
       model: openai("gpt-5.4-mini"),
       schema: aiSchema,
       system:
-        "You write calm, precise dashboard copy for a relocation tool. Keep the tone reflective, non-judgmental, and concrete. Never frame the score as a grade or pass/fail. Keep each field to 1-3 sentences, plain text, no markdown.",
+        "You write calm, precise dashboard copy for a relocation tool. Keep the tone reflective, non-judgmental, and concrete. Never frame the score as a grade or pass/fail. Keep each field to 1-3 sentences, plain text, no markdown. When living history is provided, weave in how the user's roots, migration pattern, and generational context relate to the city they are considering. When identity/ethnicity context is provided, factor in community presence, representation, cultural resources, and any relevant dynamics for that background in the target city.",
       prompt: [
         `City: ${city.name}`,
         `Overview: ${dossier.overview}`,
         `Historical context: ${dossier.historicalContext}`,
         `Language access: ${dossier.languageAccess}`,
+        historyContext,
+        identityContext,
         `Financial narrative seed: ${summary.financial.narrative}`,
         `Lifestyle translation: ${summary.financial.lifestyleTranslation}`,
         `Top financial metrics: ${summary.financial.metrics
@@ -93,7 +138,9 @@ export async function POST(request: Request) {
         `Score: ${summary.consciousMove.score}`,
         `Score narrative seed: ${summary.consciousMove.narrative}`,
         `Drivers: ${summary.consciousMove.drivers.join(" | ")}`,
-      ].join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
     });
 
     summary.financial.narrative = object.financialNarrative.trim();

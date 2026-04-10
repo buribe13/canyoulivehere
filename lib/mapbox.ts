@@ -12,7 +12,7 @@ export const MAP_STYLES = {
 
 export type MapStyleKey = keyof typeof MAP_STYLES;
 
-export const MAP_STYLE = MAP_STYLES.dark;
+export const MAP_STYLE = MAP_STYLES.streets;
 
 export const INITIAL_VIEW = {
   center: INITIAL_MAP_PRESET.center,

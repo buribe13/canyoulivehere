@@ -13,11 +13,22 @@ import { CITIES, DEFAULT_CITY_SLUG, getCityBySlug } from "@/lib/cities";
 import type {
   City,
   CityDashboardSummary,
+  DashboardAgentPage,
+  DashboardMapFocus,
   DashboardProfile,
   DashboardSession,
+  PageAgentState,
   UserFinancialProfile,
   LifestyleSnapshot,
   PositionalityProfile,
+  IdentityProfile,
+  LivingHistory,
+  LivingHistoryNode,
+  ProfileChatState,
+  ProfileChatMessage,
+  MovePlanState,
+  MovePlanMessage,
+  DocumentSection,
 } from "@/lib/types";
 
 const SESSION_KEY = "cyh-dashboard-session";
@@ -42,15 +53,42 @@ const DEFAULT_POSITIONALITY: PositionalityProfile = {
   moveReason: "opportunity",
 };
 
+const DEFAULT_IDENTITY: IdentityProfile = {
+  ethnicity: "",
+  communityTies: "",
+};
+
 const DEFAULT_PROFILE: DashboardProfile = {
   financial: DEFAULT_FINANCIAL,
   lifestyle: DEFAULT_LIFESTYLE,
   positionality: DEFAULT_POSITIONALITY,
+  identity: DEFAULT_IDENTITY,
 };
+
+const DEFAULT_MOVE_PLAN: MovePlanState = {
+  messages: [],
+  answers: {},
+  complete: false,
+  documentSections: [],
+};
+
+const DEFAULT_PAGE_AGENTS: Record<DashboardAgentPage, PageAgentState> = {
+  neighborhoods: { messages: [] },
+  "conscious-move": { messages: [] },
+  resources: { messages: [] },
+};
+
+const MOVE_PLAN_VERSION = 2;
 
 interface StoredDashboardState {
   citySlug: string;
   profile: DashboardProfile;
+  livingHistory?: LivingHistory;
+  profileChat?: ProfileChatState;
+  movePlan?: MovePlanState;
+  pageAgents?: Partial<Record<DashboardAgentPage, PageAgentState>>;
+  mapFocus?: DashboardMapFocus | null;
+  movePlanVersion?: number;
 }
 
 interface DashboardContextValue {
@@ -59,6 +97,8 @@ interface DashboardContextValue {
   city: City;
   citySlug: string;
   profile: DashboardProfile;
+  livingHistory: LivingHistory;
+  profileChat: ProfileChatState;
   summary: CityDashboardSummary | null;
   summaryStatus: "idle" | "loading" | "ready" | "error";
   aiEnhanced: boolean;
@@ -67,6 +107,30 @@ interface DashboardContextValue {
   updateFinancial: (patch: Partial<UserFinancialProfile>) => void;
   updateLifestyle: (patch: Partial<LifestyleSnapshot>) => void;
   updatePositionality: (patch: Partial<PositionalityProfile>) => void;
+  updateIdentity: (patch: Partial<IdentityProfile>) => void;
+  addHistoryNode: (node: LivingHistoryNode) => void;
+  updateHistoryNode: (id: string, patch: Partial<LivingHistoryNode>) => void;
+  removeHistoryNode: (id: string) => void;
+  reorderHistoryNodes: (fromIndex: number, toIndex: number) => void;
+  setProfileChat: (chat: ProfileChatState) => void;
+  addProfileChatMessage: (msg: ProfileChatMessage) => void;
+  movePlan: MovePlanState;
+  pageAgents: Record<DashboardAgentPage, PageAgentState>;
+  mapFocus: DashboardMapFocus | null;
+  setMovePlanMessages: (msgs: MovePlanMessage[]) => void;
+  addMovePlanMessage: (msg: MovePlanMessage) => void;
+  setMovePlanAnswers: (answers: Record<string, unknown>) => void;
+  setMovePlanComplete: (complete: boolean) => void;
+  setMovePlanDocumentSections: (sections: DocumentSection[]) => void;
+  setPageAgentMessages: (
+    page: DashboardAgentPage,
+    msgs: MovePlanMessage[]
+  ) => void;
+  addPageAgentMessage: (page: DashboardAgentPage, msg: MovePlanMessage) => void;
+  resetPageAgent: (page: DashboardAgentPage) => void;
+  setMapFocus: (focus: DashboardMapFocus) => void;
+  clearMapFocus: () => void;
+  resetMovePlan: () => void;
   signOut: () => void;
 }
 
@@ -100,6 +164,15 @@ export function DashboardProvider({
     "idle" | "loading" | "ready" | "error"
   >("idle");
   const [aiEnhanced, setAiEnhanced] = useState(false);
+  const [livingHistory, setLivingHistory] = useState<LivingHistory>({ nodes: [] });
+  const [profileChat, setProfileChatState] = useState<ProfileChatState>({
+    messages: [],
+    concerns: [],
+  });
+  const [movePlan, setMovePlanState] = useState<MovePlanState>(DEFAULT_MOVE_PLAN);
+  const [pageAgents, setPageAgents] =
+    useState<Record<DashboardAgentPage, PageAgentState>>(DEFAULT_PAGE_AGENTS);
+  const [mapFocus, setMapFocusState] = useState<DashboardMapFocus | null>(null);
 
   useEffect(() => {
     const nextSession = readJson<DashboardSession>(SESSION_KEY);
@@ -125,7 +198,50 @@ export function DashboardProvider({
           ...DEFAULT_POSITIONALITY,
           ...nextState.profile.positionality,
         },
+        identity: {
+          ...DEFAULT_IDENTITY,
+          ...nextState.profile.identity,
+        },
       });
+    }
+
+    if (nextState?.livingHistory?.nodes?.length) {
+      setLivingHistory(nextState.livingHistory);
+    }
+
+    if (
+      nextState?.profileChat?.messages?.length &&
+      nextState.movePlanVersion === MOVE_PLAN_VERSION
+    ) {
+      setProfileChatState(nextState.profileChat);
+    }
+
+    if (
+      nextState?.movePlan &&
+      nextState.movePlanVersion === MOVE_PLAN_VERSION
+    ) {
+      setMovePlanState({ ...DEFAULT_MOVE_PLAN, ...nextState.movePlan });
+    }
+
+    if (nextState?.pageAgents) {
+      setPageAgents({
+        neighborhoods: {
+          ...DEFAULT_PAGE_AGENTS.neighborhoods,
+          ...nextState.pageAgents.neighborhoods,
+        },
+        "conscious-move": {
+          ...DEFAULT_PAGE_AGENTS["conscious-move"],
+          ...nextState.pageAgents["conscious-move"],
+        },
+        resources: {
+          ...DEFAULT_PAGE_AGENTS.resources,
+          ...nextState.pageAgents.resources,
+        },
+      });
+    }
+
+    if (nextState?.mapFocus) {
+      setMapFocusState(nextState.mapFocus);
     }
 
     setHydrated(true);
@@ -139,9 +255,25 @@ export function DashboardProvider({
       JSON.stringify({
         citySlug,
         profile,
+        livingHistory,
+        profileChat,
+        movePlan,
+        pageAgents,
+        mapFocus,
+        movePlanVersion: MOVE_PLAN_VERSION,
       } satisfies StoredDashboardState)
     );
-  }, [citySlug, hydrated, profile, session]);
+  }, [
+    citySlug,
+    hydrated,
+    livingHistory,
+    mapFocus,
+    movePlan,
+    pageAgents,
+    profile,
+    profileChat,
+    session,
+  ]);
 
   useEffect(() => {
     if (!hydrated || !session) return;
@@ -159,6 +291,7 @@ export function DashboardProvider({
           body: JSON.stringify({
             citySlug,
             profile,
+            livingHistory,
           }),
           signal: controller.signal,
         });
@@ -185,11 +318,12 @@ export function DashboardProvider({
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [citySlug, hydrated, profile, session]);
+  }, [citySlug, hydrated, livingHistory, profile, session]);
 
   const setCitySlug = useCallback((slug: string) => {
     if (!getCityBySlug(slug)) return;
     setCitySlugState(slug);
+    setMapFocusState(null);
   }, []);
 
   const updateFinancial = useCallback((patch: Partial<UserFinancialProfile>) => {
@@ -225,6 +359,125 @@ export function DashboardProvider({
     []
   );
 
+  const updateIdentity = useCallback(
+    (patch: Partial<IdentityProfile>) => {
+      setProfile((current) => ({
+        ...current,
+        identity: {
+          ...current.identity,
+          ...patch,
+        },
+      }));
+    },
+    []
+  );
+
+  const addHistoryNode = useCallback((node: LivingHistoryNode) => {
+    setLivingHistory((prev) => ({ nodes: [...prev.nodes, node] }));
+  }, []);
+
+  const updateHistoryNode = useCallback(
+    (id: string, patch: Partial<LivingHistoryNode>) => {
+      setLivingHistory((prev) => ({
+        nodes: prev.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
+      }));
+    },
+    []
+  );
+
+  const removeHistoryNode = useCallback((id: string) => {
+    setLivingHistory((prev) => ({
+      nodes: prev.nodes.filter((n) => n.id !== id && n.parentId !== id),
+    }));
+  }, []);
+
+  const reorderHistoryNodes = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setLivingHistory((prev) => {
+        const next = [...prev.nodes];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        return { nodes: next };
+      });
+    },
+    []
+  );
+
+  const setProfileChat = useCallback((chat: ProfileChatState) => {
+    setProfileChatState(chat);
+  }, []);
+
+  const addProfileChatMessage = useCallback((msg: ProfileChatMessage) => {
+    setProfileChatState((prev) => ({
+      ...prev,
+      messages: [...prev.messages, msg],
+    }));
+  }, []);
+
+  const setMovePlanMessages = useCallback((msgs: MovePlanMessage[]) => {
+    setMovePlanState((prev) => ({ ...prev, messages: msgs }));
+  }, []);
+
+  const addMovePlanMessage = useCallback((msg: MovePlanMessage) => {
+    setMovePlanState((prev) => ({
+      ...prev,
+      messages: [...prev.messages, msg],
+    }));
+  }, []);
+
+  const setMovePlanAnswers = useCallback((answers: Record<string, unknown>) => {
+    setMovePlanState((prev) => ({ ...prev, answers }));
+  }, []);
+
+  const setMovePlanComplete = useCallback((complete: boolean) => {
+    setMovePlanState((prev) => ({ ...prev, complete }));
+  }, []);
+
+  const setMovePlanDocumentSections = useCallback((sections: DocumentSection[]) => {
+    setMovePlanState((prev) => ({ ...prev, documentSections: sections }));
+  }, []);
+
+  const setPageAgentMessages = useCallback(
+    (page: DashboardAgentPage, msgs: MovePlanMessage[]) => {
+      setPageAgents((prev) => ({
+        ...prev,
+        [page]: { messages: msgs },
+      }));
+    },
+    []
+  );
+
+  const addPageAgentMessage = useCallback(
+    (page: DashboardAgentPage, msg: MovePlanMessage) => {
+      setPageAgents((prev) => ({
+        ...prev,
+        [page]: {
+          messages: [...prev[page].messages, msg],
+        },
+      }));
+    },
+    []
+  );
+
+  const resetPageAgent = useCallback((page: DashboardAgentPage) => {
+    setPageAgents((prev) => ({
+      ...prev,
+      [page]: { messages: [] },
+    }));
+  }, []);
+
+  const setMapFocus = useCallback((focus: DashboardMapFocus) => {
+    setMapFocusState(focus);
+  }, []);
+
+  const clearMapFocus = useCallback(() => {
+    setMapFocusState(null);
+  }, []);
+
+  const resetMovePlan = useCallback(() => {
+    setMovePlanState(DEFAULT_MOVE_PLAN);
+  }, []);
+
   const signOut = useCallback(() => {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(SESSION_KEY);
@@ -243,6 +496,8 @@ export function DashboardProvider({
       city,
       citySlug,
       profile,
+      livingHistory,
+      profileChat,
       summary,
       summaryStatus,
       aiEnhanced,
@@ -251,20 +506,64 @@ export function DashboardProvider({
       updateFinancial,
       updateLifestyle,
       updatePositionality,
+      updateIdentity,
+      addHistoryNode,
+      updateHistoryNode,
+      removeHistoryNode,
+      reorderHistoryNodes,
+      setProfileChat,
+      addProfileChatMessage,
+      movePlan,
+      pageAgents,
+      mapFocus,
+      setMovePlanMessages,
+      addMovePlanMessage,
+      setMovePlanAnswers,
+      setMovePlanComplete,
+      setMovePlanDocumentSections,
+      setPageAgentMessages,
+      addPageAgentMessage,
+      resetPageAgent,
+      setMapFocus,
+      clearMapFocus,
+      resetMovePlan,
       signOut,
     }),
     [
+      addHistoryNode,
+      addMovePlanMessage,
+      addProfileChatMessage,
       aiEnhanced,
+      clearMapFocus,
       city,
       citySlug,
       hydrated,
+      livingHistory,
+      mapFocus,
+      movePlan,
+      pageAgents,
       profile,
+      profileChat,
+      reorderHistoryNodes,
+      removeHistoryNode,
+      resetPageAgent,
+      resetMovePlan,
       session,
+      setMapFocus,
+      setPageAgentMessages,
       setCitySlug,
+      addPageAgentMessage,
+      setMovePlanAnswers,
+      setMovePlanComplete,
+      setMovePlanDocumentSections,
+      setMovePlanMessages,
+      setProfileChat,
       signOut,
       summary,
       summaryStatus,
       updateFinancial,
+      updateHistoryNode,
+      updateIdentity,
       updateLifestyle,
       updatePositionality,
     ]

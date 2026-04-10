@@ -9,7 +9,7 @@ const SESSION_KEY = "cyh-dashboard-session";
 
 export default function SignInScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("hello@example.com");
+  const [email, setEmail] = useState("ben@uribe.com");
   const [password, setPassword] = useState("password");
 
   useEffect(() => {

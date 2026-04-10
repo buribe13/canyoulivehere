@@ -5,7 +5,7 @@ import { useDashboard } from "@/components/dashboard/dashboard-provider";
 
 export default function TopBar() {
   const { city, cities, setCitySlug, session } = useDashboard();
-  const username = session?.email?.split("@")[0] ?? "user";
+  const username = "Ben Uribe";
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -31,6 +31,7 @@ export default function TopBar() {
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-1.5 text-nav text-ink-secondary transition-[opacity] duration-150 ease-out hover:opacity-80"
         >
+          <span className="text-ink-muted">Moving to:</span>
           {city.name}, {city.state}
           <svg
             width="12"

@@ -10,7 +10,7 @@ export default function DashboardShell({
 }: {
   children: React.ReactNode;
 }) {
-  const { citySlug, hydrated, session } = useDashboard();
+  const { citySlug, hydrated, mapFocus, session } = useDashboard();
 
   if (!hydrated || !session) {
     return (
@@ -30,8 +30,8 @@ export default function DashboardShell({
         </div>
 
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl bg-bg-raised">
-          <div className="absolute inset-0">
-            <MapShell citySlug={citySlug} />
+          <div className="absolute inset-0 opacity-20">
+            <MapShell citySlug={citySlug} focusPreset={mapFocus?.preset ?? null} />
           </div>
           <div className="relative z-10 flex min-h-0 flex-1 flex-col">
             {children}

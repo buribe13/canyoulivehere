@@ -24,6 +24,29 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "Dense, transit-connected, and culturally rich, with sustained rent pressure from centrality and constant newcomer demand.",
         languages: ["English", "Spanish", "Korean"],
         anchors: ["Wilshire corridor businesses", "Korean community institutions"],
+        coordinates: [-118.3004, 34.0628],
+        mapView: {
+          center: [-118.3004, 34.0628],
+          zoom: 13.2,
+          bearing: -10,
+          pitch: 34,
+        },
+        fitProfile: {
+          housingFits: ["roommates", "alone"],
+          workStyleFits: ["remote", "hybrid", "in-person"],
+          moveReasonFits: ["opportunity", "necessity"],
+          budgetBand: "stretch",
+          communitySignals: ["Korean", "Asian", "diaspora", "immigrant"],
+          vibe: "Fast, dense, transit-friendly, and always on.",
+          caution:
+            "Rent pressure is persistent, so convenience can outpace your financial margin very quickly.",
+        },
+        articleQueries: {
+          history: "\"Koreatown\" Los Angeles history community development",
+          development:
+            "\"Koreatown\" Los Angeles housing development rent pressure",
+          currentEvents: "\"Koreatown\" Los Angeles community news",
+        },
       },
       {
         name: "Boyle Heights",
@@ -32,6 +55,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A historic Mexican American neighborhood where arts investment and regional access continue to raise fears of displacement.",
         languages: ["English", "Spanish"],
         anchors: ["Mariachi Plaza", "legacy family businesses"],
+        coordinates: [-118.2051, 34.0401],
+        mapView: {
+          center: [-118.2051, 34.0401],
+          zoom: 13.1,
+          bearing: -16,
+          pitch: 32,
+        },
+        fitProfile: {
+          housingFits: ["roommates", "family"],
+          workStyleFits: ["hybrid", "in-person"],
+          moveReasonFits: ["necessity", "caretaking"],
+          budgetBand: "steady",
+          communitySignals: ["Latino", "Mexican", "Chicano", "Spanish", "family"],
+          vibe: "Rooted, civically active, and deeply shaped by local memory.",
+          caution:
+            "This is a neighborhood where newcomers need to understand displacement concerns before treating culture as an amenity.",
+        },
+        articleQueries: {
+          history:
+            "\"Boyle Heights\" Los Angeles history displacement community",
+          development:
+            "\"Boyle Heights\" Los Angeles development gentrification housing",
+          currentEvents: "\"Boyle Heights\" Los Angeles local news community",
+        },
       },
       {
         name: "Leimert Park",
@@ -40,6 +87,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A major Black cultural anchor with deep artistic history and renewed development pressure tied to transit investment.",
         languages: ["English"],
         anchors: ["Leimert Park Village", "community arts spaces"],
+        coordinates: [-118.3283, 34.0005],
+        mapView: {
+          center: [-118.3283, 34.0005],
+          zoom: 13,
+          bearing: -8,
+          pitch: 28,
+        },
+        fitProfile: {
+          housingFits: ["alone", "family"],
+          workStyleFits: ["remote", "hybrid"],
+          moveReasonFits: ["opportunity", "caretaking"],
+          budgetBand: "steady",
+          communitySignals: ["Black", "African", "arts", "culture", "diaspora"],
+          vibe: "Creative, neighborhood-scaled, and anchored in cultural institutions.",
+          caution:
+            "The cultural draw is real, but transit-led investment is also raising the stakes around who gets to stay.",
+        },
+        articleQueries: {
+          history:
+            "\"Leimert Park\" Los Angeles Black history arts community",
+          development:
+            "\"Leimert Park\" Los Angeles development transit investment",
+          currentEvents: "\"Leimert Park\" Los Angeles community news",
+        },
       },
     ],
     timeline: [
@@ -111,6 +182,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "Culturally central and transit-rich, with long-running displacement pressure tied to venture wealth and limited housing supply.",
         languages: ["English", "Spanish"],
         anchors: ["Latino cultural institutions", "independent restaurants and murals"],
+        coordinates: [-122.4192, 37.7599],
+        mapView: {
+          center: [-122.4192, 37.7599],
+          zoom: 13.4,
+          bearing: -12,
+          pitch: 30,
+        },
+        fitProfile: {
+          housingFits: ["roommates", "alone"],
+          workStyleFits: ["remote", "hybrid", "in-person"],
+          moveReasonFits: ["opportunity", "necessity"],
+          budgetBand: "stretch",
+          communitySignals: ["Latino", "Mexican", "Spanish", "arts", "immigrant"],
+          vibe: "Energetic, central, and intensely shaped by culture and pressure.",
+          caution:
+            "The Mission can feel like the obvious answer, but that same centrality often means the thinnest room for error.",
+        },
+        articleQueries: {
+          history:
+            "\"Mission District\" San Francisco history displacement community",
+          development:
+            "\"Mission District\" San Francisco housing development gentrification",
+          currentEvents: "\"Mission District\" San Francisco local news",
+        },
       },
       {
         name: "Chinatown",
@@ -119,6 +214,29 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A dense immigrant anchor with unusually strong cultural continuity, but affordability stress remains intense.",
         languages: ["Cantonese", "English", "Mandarin"],
         anchors: ["family associations", "senior services", "legacy businesses"],
+        coordinates: [-122.4066, 37.7941],
+        mapView: {
+          center: [-122.4066, 37.7941],
+          zoom: 14,
+          bearing: -18,
+          pitch: 34,
+        },
+        fitProfile: {
+          housingFits: ["alone", "roommates"],
+          workStyleFits: ["in-person", "hybrid"],
+          moveReasonFits: ["caretaking", "necessity"],
+          budgetBand: "steady",
+          communitySignals: ["Chinese", "Asian", "Cantonese", "Mandarin", "elder"],
+          vibe: "Dense, intergenerational, and institutionally rooted.",
+          caution:
+            "The community fabric is strong, but availability and affordability can still make access fragile.",
+        },
+        articleQueries: {
+          history: "\"Chinatown\" San Francisco history community",
+          development:
+            "\"Chinatown\" San Francisco housing development preservation",
+          currentEvents: "\"Chinatown\" San Francisco local news",
+        },
       },
       {
         name: "Bayview-Hunters Point",
@@ -127,6 +245,31 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A historically Black neighborhood with ongoing environmental justice and development pressure concerns.",
         languages: ["English"],
         anchors: ["community health orgs", "church networks"],
+        coordinates: [-122.3892, 37.7294],
+        mapView: {
+          center: [-122.3892, 37.7294],
+          zoom: 12.9,
+          bearing: -10,
+          pitch: 26,
+        },
+        fitProfile: {
+          housingFits: ["family", "alone"],
+          workStyleFits: ["remote", "hybrid"],
+          moveReasonFits: ["caretaking", "necessity"],
+          budgetBand: "steady",
+          communitySignals: ["Black", "environmental justice", "church", "community"],
+          vibe: "Residential, civic-minded, and shaped by long-term organizing.",
+          caution:
+            "Fit here depends less on trend proximity and more on whether you value community continuity over central convenience.",
+        },
+        articleQueries: {
+          history:
+            "\"Bayview-Hunters Point\" San Francisco history community",
+          development:
+            "\"Bayview-Hunters Point\" San Francisco development environmental justice",
+          currentEvents:
+            "\"Bayview-Hunters Point\" San Francisco local news",
+        },
       },
     ],
     timeline: [
@@ -198,6 +341,28 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A long-standing Mexican neighborhood where cultural visibility remains strong but housing pressure is persistent.",
         languages: ["English", "Spanish"],
         anchors: ["arts spaces", "family-owned food businesses"],
+        coordinates: [-87.6818, 41.8565],
+        mapView: {
+          center: [-87.6818, 41.8565],
+          zoom: 13.3,
+          bearing: -14,
+          pitch: 30,
+        },
+        fitProfile: {
+          housingFits: ["roommates", "family"],
+          workStyleFits: ["hybrid", "in-person"],
+          moveReasonFits: ["necessity", "caretaking"],
+          budgetBand: "steady",
+          communitySignals: ["Latino", "Mexican", "Spanish", "arts", "family"],
+          vibe: "Visible, expressive, and strongly neighborhood-oriented.",
+          caution:
+            "Its cultural visibility can attract newcomers quickly, so understanding local pressure is part of living here responsibly.",
+        },
+        articleQueries: {
+          history: "\"Pilsen\" Chicago history community displacement",
+          development: "\"Pilsen\" Chicago development housing gentrification",
+          currentEvents: "\"Pilsen\" Chicago local news",
+        },
       },
       {
         name: "Bronzeville",
@@ -206,6 +371,29 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "Historically central to Black Chicago, with heritage preservation and reinvestment moving side by side.",
         languages: ["English"],
         anchors: ["historic music and civic sites", "church networks"],
+        coordinates: [-87.6176, 41.8219],
+        mapView: {
+          center: [-87.6176, 41.8219],
+          zoom: 13,
+          bearing: -8,
+          pitch: 28,
+        },
+        fitProfile: {
+          housingFits: ["alone", "family"],
+          workStyleFits: ["remote", "hybrid", "in-person"],
+          moveReasonFits: ["opportunity", "caretaking"],
+          budgetBand: "steady",
+          communitySignals: ["Black", "history", "music", "church", "civic"],
+          vibe: "Historic, reflective, and tied to a strong civic lineage.",
+          caution:
+            "The neighborhood rewards people who value place history, not just relative affordability or commute math.",
+        },
+        articleQueries: {
+          history: "\"Bronzeville\" Chicago history Black community",
+          development:
+            "\"Bronzeville\" Chicago development reinvestment housing",
+          currentEvents: "\"Bronzeville\" Chicago local news",
+        },
       },
       {
         name: "Albany Park",
@@ -214,6 +402,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A deeply multilingual neighborhood with strong immigrant networks and a more mixed affordability profile.",
         languages: ["English", "Spanish", "Arabic", "Korean"],
         anchors: ["multilingual small businesses", "community schools"],
+        coordinates: [-87.7194, 41.9683],
+        mapView: {
+          center: [-87.7194, 41.9683],
+          zoom: 12.9,
+          bearing: -10,
+          pitch: 24,
+        },
+        fitProfile: {
+          housingFits: ["family", "roommates"],
+          workStyleFits: ["remote", "hybrid"],
+          moveReasonFits: ["necessity", "caretaking", "opportunity"],
+          budgetBand: "flexible",
+          communitySignals: ["immigrant", "multilingual", "Arabic", "Korean", "Spanish"],
+          vibe: "Layered, multilingual, and more everyday than performative.",
+          caution:
+            "Affordability can look stronger here, but fit depends on whether you want a neighborhood organized around local daily life.",
+        },
+        articleQueries: {
+          history:
+            "\"Albany Park\" Chicago history immigrant community",
+          development:
+            "\"Albany Park\" Chicago housing development neighborhood change",
+          currentEvents: "\"Albany Park\" Chicago local news",
+        },
       },
     ],
     timeline: [
@@ -285,6 +497,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "One of the city's strongest multilingual community anchors, with deep immigrant infrastructure and growing cost pressure.",
         languages: ["English", "Spanish", "Bengali", "Nepali", "Tibetan"],
         anchors: ["immigrant business corridors", "multilingual services"],
+        coordinates: [-73.8857, 40.7557],
+        mapView: {
+          center: [-73.8857, 40.7557],
+          zoom: 13.6,
+          bearing: 8,
+          pitch: 34,
+        },
+        fitProfile: {
+          housingFits: ["roommates", "family"],
+          workStyleFits: ["hybrid", "in-person"],
+          moveReasonFits: ["necessity", "caretaking", "opportunity"],
+          budgetBand: "steady",
+          communitySignals: ["immigrant", "South Asian", "Latino", "multilingual", "diaspora"],
+          vibe: "Dense, multilingual, and oriented around local infrastructure.",
+          caution:
+            "Transit access is excellent, but rising pressure means the neighborhood works best when community fit matters more than brand value.",
+        },
+        articleQueries: {
+          history:
+            "\"Jackson Heights\" New York history immigrant community",
+          development:
+            "\"Jackson Heights\" Queens housing development neighborhood change",
+          currentEvents: "\"Jackson Heights\" Queens local news",
+        },
       },
       {
         name: "Bed-Stuy",
@@ -293,6 +529,29 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A historic Black neighborhood where investment and displacement pressure have moved together for years.",
         languages: ["English"],
         anchors: ["legacy churches", "arts venues", "small businesses"],
+        coordinates: [-73.9419, 40.6872],
+        mapView: {
+          center: [-73.9419, 40.6872],
+          zoom: 13.4,
+          bearing: 10,
+          pitch: 32,
+        },
+        fitProfile: {
+          housingFits: ["roommates", "alone"],
+          workStyleFits: ["remote", "hybrid", "in-person"],
+          moveReasonFits: ["opportunity", "necessity"],
+          budgetBand: "stretch",
+          communitySignals: ["Black", "arts", "church", "legacy", "community"],
+          vibe: "Residential, expressive, and heavily shaped by change.",
+          caution:
+            "This is a place where convenience, cachet, and displacement pressure often overlap too neatly.",
+        },
+        articleQueries: {
+          history: "\"Bed-Stuy\" Brooklyn history community displacement",
+          development:
+            "\"Bed-Stuy\" Brooklyn housing development gentrification",
+          currentEvents: "\"Bed-Stuy\" Brooklyn local news",
+        },
       },
       {
         name: "Washington Heights",
@@ -301,6 +560,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A dense Dominican and Latino anchor with relative access advantages, but rising cost pressure tied to location and transit.",
         languages: ["English", "Spanish"],
         anchors: ["uptown parks", "family-run food and retail"],
+        coordinates: [-73.9362, 40.8518],
+        mapView: {
+          center: [-73.9362, 40.8518],
+          zoom: 13.1,
+          bearing: 14,
+          pitch: 30,
+        },
+        fitProfile: {
+          housingFits: ["family", "roommates"],
+          workStyleFits: ["hybrid", "in-person"],
+          moveReasonFits: ["necessity", "caretaking"],
+          budgetBand: "steady",
+          communitySignals: ["Dominican", "Latino", "Spanish", "family", "diaspora"],
+          vibe: "Family-scaled, park-connected, and strongly neighborhood-based.",
+          caution:
+            "It can offer more breathing room than lower Manhattan, but that advantage shrinks as demand pushes uptown.",
+        },
+        articleQueries: {
+          history:
+            "\"Washington Heights\" Manhattan history Dominican community",
+          development:
+            "\"Washington Heights\" Manhattan housing development neighborhood change",
+          currentEvents: "\"Washington Heights\" Manhattan local news",
+        },
       },
     ],
     timeline: [
@@ -372,6 +655,29 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "A historically Black neighborhood where institutional growth and development pressure remain central concerns.",
         languages: ["English", "Spanish", "Haitian Creole"],
         anchors: ["community health orgs", "arts institutions"],
+        coordinates: [-71.0826, 42.3296],
+        mapView: {
+          center: [-71.0826, 42.3296],
+          zoom: 13.2,
+          bearing: -10,
+          pitch: 28,
+        },
+        fitProfile: {
+          housingFits: ["family", "alone"],
+          workStyleFits: ["remote", "hybrid", "in-person"],
+          moveReasonFits: ["caretaking", "necessity"],
+          budgetBand: "steady",
+          communitySignals: ["Black", "Haitian", "arts", "community", "health"],
+          vibe: "Institutionally aware, community-rooted, and historically significant.",
+          caution:
+            "Roxbury makes the city's pressure legible fast, so fit here depends on how seriously you take local history.",
+        },
+        articleQueries: {
+          history: "\"Roxbury\" Boston history Black community",
+          development:
+            "\"Roxbury\" Boston development housing pressure",
+          currentEvents: "\"Roxbury\" Boston local news",
+        },
       },
       {
         name: "Dorchester",
@@ -380,6 +686,30 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "Large, varied, and deeply immigrant, with different affordability and transit realities inside the same neighborhood name.",
         languages: ["English", "Spanish", "Vietnamese", "Cape Verdean Creole"],
         anchors: ["neighborhood main streets", "faith communities"],
+        coordinates: [-71.0656, 42.2973],
+        mapView: {
+          center: [-71.0656, 42.2973],
+          zoom: 12.6,
+          bearing: -6,
+          pitch: 22,
+        },
+        fitProfile: {
+          housingFits: ["family", "roommates"],
+          workStyleFits: ["remote", "hybrid"],
+          moveReasonFits: ["necessity", "caretaking", "opportunity"],
+          budgetBand: "flexible",
+          communitySignals: ["immigrant", "Vietnamese", "Cape Verdean", "faith", "family"],
+          vibe: "Big, varied, and oriented around local routines instead of downtown image.",
+          caution:
+            "Because Dorchester contains multiple sub-markets, it needs more block-level reading than a single neighborhood label suggests.",
+        },
+        articleQueries: {
+          history:
+            "\"Dorchester\" Boston history immigrant community",
+          development:
+            "\"Dorchester\" Boston housing development neighborhood change",
+          currentEvents: "\"Dorchester\" Boston local news",
+        },
       },
       {
         name: "Chinatown",
@@ -388,6 +718,29 @@ export const CITY_DOSSIERS: Record<string, CityDossier> = {
           "Small in footprint but central to the city's Asian American history, with heavy downtown development pressure.",
         languages: ["English", "Mandarin", "Cantonese"],
         anchors: ["family associations", "elder support networks"],
+        coordinates: [-71.0598, 42.3501],
+        mapView: {
+          center: [-71.0598, 42.3501],
+          zoom: 14.1,
+          bearing: -12,
+          pitch: 34,
+        },
+        fitProfile: {
+          housingFits: ["alone", "roommates"],
+          workStyleFits: ["in-person", "hybrid"],
+          moveReasonFits: ["caretaking", "opportunity"],
+          budgetBand: "stretch",
+          communitySignals: ["Chinese", "Asian", "Mandarin", "Cantonese", "elder"],
+          vibe: "Compact, historic, and under intense downtown pressure.",
+          caution:
+            "Its centrality is the draw and the risk, especially when development pressure is part of the neighborhood story.",
+        },
+        articleQueries: {
+          history: "\"Chinatown\" Boston history Asian American community",
+          development:
+            "\"Chinatown\" Boston development housing pressure",
+          currentEvents: "\"Chinatown\" Boston local news",
+        },
       },
     ],
     timeline: [

@@ -1,0 +1,22 @@
+{
+  "byAgeBand": {
+    "18-24": { "medianIncome": 26800 },
+    "25-34": { "medianIncome": 60500 },
+    "35-44": { "medianIncome": 72800 },
+    "45-54": { "medianIncome": 68400 },
+    "55+":   { "medianIncome": 49700 }
+  },
+  "byRaceEthnicity": {
+    "white":                { "medianIncome": 95400, "populationPct": 30.9 },
+    "black":                { "medianIncome": 47300, "populationPct": 20.2 },
+    "hispanic/latino":      { "medianIncome": 44100, "populationPct": 28.7 },
+    "asian":                { "medianIncome": 68900, "populationPct": 16.1 },
+    "native american":      { "medianIncome": 39800, "populationPct": 0.4 },
+    "pacific islander":     { "medianIncome": 49500, "populationPct": 0.1 },
+    "multiracial":          { "medianIncome": 56200, "populationPct": 3.6 }
+  },
+  "overall": {
+    "medianIncome": 67046,
+    "medianRent": 1750
+  }
+}
