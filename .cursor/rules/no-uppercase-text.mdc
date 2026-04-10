@@ -1,0 +1,19 @@
+---
+description: Never use all-uppercase text in the UI
+alwaysApply: true
+---
+
+# No Uppercase Text
+
+Never render text in all caps. Avoid `text-transform: uppercase`, Tailwind's `uppercase` class, and manually writing strings in ALL CAPS.
+
+Use normal sentence or title case instead.
+
+```tsx
+// bad
+<span className="uppercase">Financial Profile</span>
+<span style={{ textTransform: "uppercase" }}>Section</span>
+
+// good
+<span>Financial Profile</span>
+```

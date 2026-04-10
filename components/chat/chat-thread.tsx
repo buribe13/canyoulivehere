@@ -3,8 +3,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence } from "motion/react";
-import type { ChatMessage, Mode, UserAnswers, CityCostData, CostResult } from "@/lib/types";
-import { createChatEngine } from "@/lib/chat-flow";
+import type {
+  ChatMessage,
+  ChatOption,
+  Mode,
+  UserAnswers,
+  CityCostData,
+  CostResult,
+} from "@/lib/types";
 import { loadCityCostData } from "@/lib/cities";
 import { calculateCost } from "@/lib/cost-model";
 import ChatBubble, { TypingIndicator } from "./chat-bubble";
@@ -16,7 +22,15 @@ interface ChatThreadProps {
   inputPortal?: React.RefObject<HTMLDivElement | null>;
 }
 
-const engine = createChatEngine();
+interface ChatTurnResponse {
+  assistantMessage: string;
+  answers: Partial<UserAnswers>;
+  complete: boolean;
+  options?: ChatOption[];
+  inputType: "text" | null;
+  step: number;
+  totalSteps: number;
+}
 
 export default function ChatThread({
   mode,
@@ -25,12 +39,14 @@ export default function ChatThread({
   inputPortal,
 }: ChatThreadProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<UserAnswers>>({});
   const [typing, setTyping] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [options, setOptions] = useState<ChatOption[]>();
+  const [inputType, setInputType] = useState<"text" | null>("text");
   const scrollRef = useRef<HTMLDivElement>(null);
   const costDataRef = useRef<CityCostData | null>(null);
+  const requestIdRef = useRef(0);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -47,124 +63,148 @@ export default function ChatThread({
     });
   }, [citySlug]);
 
-  const pushAssistantMessage = useCallback(
-    (nextStep: number, currentAnswers: Partial<UserAnswers>) => {
-      setTyping(true);
-      setTimeout(() => {
-        const msg = engine.getNextMessage(mode, nextStep, currentAnswers);
-        if (msg) {
-          setMessages((prev) => [...prev, msg]);
-          setStep(nextStep + 1);
-        }
-        setTyping(false);
-      }, 600);
-    },
-    [mode]
-  );
-
-  useEffect(() => {
-    pushAssistantMessage(0, {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages, typing, scrollToBottom]);
 
-  const handleAnswer = useCallback(
-    (value: string) => {
-      const userMsg: ChatMessage = {
-        id: `user-${step}`,
-        role: "user",
-        content: value,
-      };
-      setMessages((prev) => [...prev, userMsg]);
+  const requestAssistantTurn = useCallback(
+    async (
+      nextMessages: ChatMessage[],
+      currentAnswers: Partial<UserAnswers>
+    ) => {
+      const requestId = ++requestIdRef.current;
+      setTyping(true);
+      setOptions(undefined);
 
-      const newAnswers = { ...answers };
-      const currentStep = step - 1;
+      try {
+        const response = await fetch("/api/chat-intake", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            citySlug,
+            mode,
+            answers: currentAnswers,
+            messages: nextMessages,
+          }),
+        });
 
-      if (mode === "starting-out") {
-        switch (currentStep) {
-          case 0:
-            newAnswers.income = Number(value);
-            break;
-          case 1:
-            newAnswers.living = value as UserAnswers["living"];
-            break;
-          case 2:
-            newAnswers.transport = value as UserAnswers["transport"];
-            break;
-          case 3:
-            newAnswers.food = value as UserAnswers["food"];
-            break;
-          case 4:
-            newAnswers.studentLoans = Number(value) || 0;
-            break;
-          case 5:
-            newAnswers.lifestyle = value as UserAnswers["lifestyle"];
-            break;
+        if (!response.ok) {
+          throw new Error("Chat intake failed");
         }
-      } else {
-        switch (currentStep) {
-          case 0:
-            newAnswers.income = Number(value);
-            break;
-          case 1:
-            newAnswers.living = value as UserAnswers["living"];
-            break;
-          case 2:
-            newAnswers.transport = value as UserAnswers["transport"];
-            break;
-          case 3:
-            newAnswers.food = value as UserAnswers["food"];
-            break;
-          case 4:
-            newAnswers.priority = value as UserAnswers["priority"];
-            break;
-          case 5:
-            newAnswers.lifestyle = value as UserAnswers["lifestyle"];
-            break;
-        }
-      }
 
-      setAnswers(newAnswers);
-
-      const totalSteps = engine.getTotalSteps(mode);
-      if (step >= totalSteps) {
-        if (costDataRef.current) {
-          const result = calculateCost(
-            costDataRef.current,
-            newAnswers as UserAnswers,
-            mode
-          );
-          setTimeout(() => onComplete(result), 400);
+        const data = (await response.json()) as ChatTurnResponse;
+        if (requestId !== requestIdRef.current) {
+          return;
         }
-      } else {
-        pushAssistantMessage(step, newAnswers);
+
+        const assistantMessage: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: data.assistantMessage,
+          options: data.options,
+          inputType: data.inputType ?? undefined,
+          step: data.step,
+          totalSteps: data.totalSteps,
+        };
+
+        setMessages([...nextMessages, assistantMessage]);
+        setAnswers(data.answers);
+        setOptions(data.options);
+        setInputType(data.inputType);
+
+        if (data.complete) {
+          const costData =
+            costDataRef.current ?? (await loadCityCostData(citySlug));
+          costDataRef.current = costData;
+
+          if (costData) {
+            const result = calculateCost(
+              costData,
+              data.answers as UserAnswers,
+              mode
+            );
+            window.setTimeout(() => onComplete(result), 450);
+          }
+        }
+      } catch {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        setOptions(undefined);
+        setInputType("text");
+        setMessages([
+          ...nextMessages,
+          {
+            id: `assistant-error-${Date.now()}`,
+            role: "assistant",
+            content:
+              "I hit a snag while reading your answer. Try sending that again and I’ll keep going.",
+          },
+        ]);
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setTyping(false);
+        }
       }
     },
-    [step, answers, mode, onComplete, pushAssistantMessage]
+    [citySlug, mode, onComplete]
+  );
+
+  useEffect(() => {
+    requestIdRef.current += 1;
+    setMessages([]);
+    setAnswers({});
+    setInputValue("");
+    setOptions(undefined);
+    setInputType("text");
+    void requestAssistantTurn([], {});
+  }, [citySlug, mode, requestAssistantTurn]);
+
+  const handleAnswer = useCallback(
+    async (value: string) => {
+      const trimmedValue = value.trim();
+      if (!trimmedValue || typing) {
+        return;
+      }
+
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: trimmedValue,
+      };
+      const nextMessages = [...messages, userMessage];
+
+      setMessages(nextMessages);
+      setInputValue("");
+
+      await requestAssistantTurn(nextMessages, answers);
+    },
+    [answers, messages, requestAssistantTurn, typing]
   );
 
   const lastAssistantMsg = [...messages]
     .reverse()
     .find((m) => m.role === "assistant");
 
-  const showOptions = lastAssistantMsg?.options && !typing;
-  const showInput = lastAssistantMsg?.inputType && !typing;
+  const showOptions = options && options.length > 0 && !typing;
+  const showInput = inputType && !typing;
   const isWaitingForAnswer =
     lastAssistantMsg?.role === "assistant" &&
-    messages[messages.length - 1]?.role === "assistant";
+    messages[messages.length - 1]?.role === "assistant" &&
+    Boolean(inputType);
 
   const inputContent = isWaitingForAnswer && !typing ? (
     <>
       {showOptions && (
         <div className="flex flex-wrap gap-1.5">
-          {lastAssistantMsg!.options!.map((opt) => (
+          {options!.map((opt) => (
             <button
               key={opt.value}
               onClick={() => handleAnswer(opt.value)}
-              className="rounded-lg px-3 py-1.5 text-body-sm text-ink-light hover:text-ink bg-surface hover:bg-surface-hover transition-[background-color,color] duration-150 ease-out cursor-pointer"
+              className="rounded-lg px-3 py-1.5 text-body-sm text-ink-light hover:text-ink bg-surface hover:bg-surface-hover transition-[background-color,color,transform] duration-150 ease-out cursor-pointer active:scale-[0.96]"
             >
               {opt.label}
             </button>
@@ -174,28 +214,28 @@ export default function ChatThread({
 
       {showInput && (
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            if (inputValue.trim()) {
-              handleAnswer(inputValue.trim());
-              setInputValue("");
-            }
+            await handleAnswer(inputValue);
           }}
           className="flex items-center gap-2 rounded-[50px] px-3 w-full"
-          style={{ background: "rgba(255, 255, 255, 0.06)" }}
+          style={{
+            background: "rgba(255, 255, 255, 0.06)",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 28px rgba(0,0,0,0.12)",
+          }}
         >
-          <span className="text-body-sm text-ink-muted select-none">$</span>
           <input
-            type="number"
+            type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter amount"
+            placeholder="Type your answer"
             autoFocus
-            className="flex-1 bg-transparent py-2.5 text-body-sm text-ink placeholder:text-ink-muted outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="flex-1 bg-transparent py-2.5 text-body-sm text-ink placeholder:text-ink-muted outline-none"
           />
           <button
             type="submit"
-            className="size-6 flex items-center justify-center rounded-[50px] transition-[opacity] duration-150 ease-out hover:opacity-90 cursor-pointer shrink-0"
+            className="size-8 flex items-center justify-center rounded-[50px] transition-[opacity,transform] duration-150 ease-out hover:opacity-90 cursor-pointer shrink-0 active:scale-[0.96]"
             style={{ backgroundColor: "var(--accent-brand)" }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

@@ -1,3 +1,5 @@
+import { INITIAL_MAP_PRESET } from "@/lib/cities";
+
 export const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
 
 export const MAP_STYLES = {
@@ -13,6 +15,6 @@ export type MapStyleKey = keyof typeof MAP_STYLES;
 export const MAP_STYLE = MAP_STYLES.dark;
 
 export const INITIAL_VIEW = {
-  center: [-98.5, 39.5] as [number, number],
-  zoom: 3.8,
+  center: INITIAL_MAP_PRESET.center,
+  zoom: INITIAL_MAP_PRESET.zoom,
 };

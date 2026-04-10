@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Separator } from "@base-ui/react/separator";
 import type { CostResult, Mode } from "@/lib/types";
 import AnimatedNumber from "@/components/ui/animated-number";
 
 interface CostBreakdownPanelProps {
+  citySlug: string;
   result: CostResult;
   mode: Mode;
   onClose: () => void;
@@ -41,12 +43,59 @@ function Row({
 }
 
 export default function CostBreakdownPanel({
+  citySlug,
   result,
   mode,
   onClose,
 }: CostBreakdownPanelProps) {
   const gapHighlight: "positive" | "negative" =
     result.realityGap >= 0 ? "positive" : "negative";
+  const [summary, setSummary] = useState("");
+  const [summaryStatus, setSummaryStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSummary() {
+      setSummary("");
+      setSummaryStatus("loading");
+
+      try {
+        const response = await fetch("/api/affordability-summary", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            citySlug,
+            mode,
+            result,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Summary request failed");
+        }
+
+        const data = (await response.json()) as { summary?: string };
+        if (!active) return;
+
+        setSummary(data.summary?.trim() ?? "");
+        setSummaryStatus("ready");
+      } catch {
+        if (!active) return;
+        setSummaryStatus("error");
+      }
+    }
+
+    loadSummary();
+
+    return () => {
+      active = false;
+    };
+  }, [citySlug, mode, result]);
 
   return (
     <motion.div
@@ -91,6 +140,34 @@ export default function CostBreakdownPanel({
           prefix={result.realityGap >= 0 ? "+$" : "-$"}
           highlight={gapHighlight}
         />
+
+        <Separator className="separator my-3" />
+
+        <div
+          className="rounded-[18px] px-4 py-3"
+          style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 32px rgba(0,0,0,0.16)",
+          }}
+        >
+          <p className="text-label text-ink-muted mb-1">AI Take</p>
+          {summaryStatus === "loading" && (
+            <p className="text-body-sm text-ink-light [text-wrap:pretty]">
+              Turning your numbers into a quick read...
+            </p>
+          )}
+          {summaryStatus === "ready" && summary && (
+            <p className="text-body-sm text-ink-light [text-wrap:pretty] whitespace-pre-line">
+              {summary}
+            </p>
+          )}
+          {summaryStatus === "error" && (
+            <p className="text-body-sm text-ink-muted [text-wrap:pretty]">
+              AI summary is unavailable right now.
+            </p>
+          )}
+        </div>
 
         {mode === "making-change" && result.disposableIncome !== undefined && (
           <>

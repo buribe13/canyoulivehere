@@ -1,0 +1,107 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+
+const SUGGESTIONS = [
+  ["To Los Angeles", "Boston history", "West Coast displacement"],
+  ["Programs for Gen Z", "NYC transit expenses"],
+];
+
+export default function GetStartedPage() {
+  const router = useRouter();
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function go(prompt?: string) {
+    const text = (prompt ?? inputValue).trim();
+    if (text) {
+      router.push(`/dashboard/chat?prompt=${encodeURIComponent(text)}`);
+    } else {
+      router.push("/dashboard/chat");
+    }
+  }
+
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-5 px-2.5">
+      <h1 className="text-heading text-ink">
+        Create an intentional moving plan
+      </h1>
+
+      <div className="flex w-full max-w-lg items-center gap-3">
+        <button
+          type="button"
+          onClick={() => go()}
+          className="flex shrink-0 items-center gap-2 rounded-3xl bg-white px-4 py-3 text-nav text-black transition-[opacity,transform] duration-150 ease-out hover:opacity-90 active:scale-[0.96]"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Create
+        </button>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            go();
+          }}
+          className="flex flex-1 items-center gap-2 rounded-3xl border border-ink-muted px-4"
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Start your moving plan..."
+            className="flex-1 bg-transparent py-3 text-body text-ink placeholder:text-ink-muted outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!inputValue.trim()}
+            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white transition-[opacity,transform] duration-150 ease-out hover:opacity-90 active:scale-[0.96] disabled:opacity-30"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="black"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <div className="flex flex-col items-center gap-3">
+        {SUGGESTIONS.map((row, i) => (
+          <div key={i} className="flex gap-3">
+            {row.map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => go(label)}
+                className="rounded-3xl bg-surface px-2 py-1.5 text-pill text-ink transition-[opacity,transform] duration-150 ease-out hover:opacity-80 active:scale-[0.96]"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
