@@ -1,0 +1,24 @@
+{
+  "rent": {
+    "alone": 2800,
+    "roommates": 1600,
+    "family": 3800
+  },
+  "transport": {
+    "car": 750,
+    "transit": 127,
+    "hybrid": 450
+  },
+  "food": {
+    "low": 400,
+    "medium": 650,
+    "high": 1100
+  },
+  "lifestyle": {
+    "minimal": 200,
+    "balanced": 450,
+    "social": 750,
+    "premium": 1300
+  },
+  "studentLoanAvg": 400
+}
