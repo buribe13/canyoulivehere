@@ -9,6 +9,7 @@ interface ChatBubbleProps {
   children: React.ReactNode;
   step?: number;
   totalSteps?: number;
+  className?: string;
 }
 
 export default function ChatBubble({
@@ -16,6 +17,7 @@ export default function ChatBubble({
   children,
   step,
   totalSteps,
+  className,
 }: ChatBubbleProps) {
   const isAssistant = role === "assistant";
 
@@ -24,7 +26,7 @@ export default function ChatBubble({
       initial={bubbleIn.initial}
       animate={bubbleIn.animate}
       transition={bubbleIn.transition}
-      className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}
+      className={`flex ${isAssistant ? "justify-start" : "justify-end"}${className ? ` ${className}` : ""}`}
     >
       <div
         className={`max-w-[85%] rounded-[10px] px-3.5 py-2.5 ${

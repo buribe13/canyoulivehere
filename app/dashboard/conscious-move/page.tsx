@@ -85,7 +85,7 @@ function ConsciousMoveContent({ summary }: { summary: CityDashboardSummary }) {
               </div>
             </div>
 
-            <p className="mt-2 text-[14px] leading-[18px] text-ink-light">
+            <p className="mt-2 text-[14px] leading-[22px] text-ink-light">
               {summary.consciousMove.oneLiner}
             </p>
           </section>
@@ -220,7 +220,7 @@ function ConsciousMoveContent({ summary }: { summary: CityDashboardSummary }) {
       }
       rightChildren={
         <PageAgentPanel
-          title={`Improve your approach · ${city.shortName}`}
+          title="Improve your approach"
           placeholder={placeholder}
           messages={pageAgents["conscious-move"].messages}
           loading={chatLoading}

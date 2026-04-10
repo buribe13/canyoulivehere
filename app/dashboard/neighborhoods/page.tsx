@@ -72,7 +72,7 @@ function NeighborhoodsContent({ summary }: { summary: CityDashboardSummary }) {
             className="rounded-[14px] bg-[rgba(255,255,255,0.035)] px-4 py-3"
           >
             <div className="flex items-center justify-between gap-4">
-              <p className="text-[14px] leading-[18px] font-medium text-ink">
+              <p className="text-[14px] leading-[22px] font-medium text-ink">
                 {item.name}
               </p>
               <button
@@ -146,7 +146,7 @@ function NeighborhoodsContent({ summary }: { summary: CityDashboardSummary }) {
               </h1>
             </div>
 
-            <p className="mt-3 text-[14px] leading-[18px] text-ink-light">
+            <p className="mt-3 text-[14px] leading-[22px] text-ink-light">
               {recommendation.reason}
             </p>
 
@@ -200,7 +200,7 @@ function NeighborhoodsContent({ summary }: { summary: CityDashboardSummary }) {
           </div>
 
           <section className="space-y-3">
-            <p className="text-[14px] leading-[18px] font-medium text-ink">
+            <p className="text-[14px] leading-[22px] font-medium text-ink">
               Also worth comparing
             </p>
             <div className="space-y-3">{neighborhoodCards}</div>
@@ -209,7 +209,7 @@ function NeighborhoodsContent({ summary }: { summary: CityDashboardSummary }) {
       }
       rightChildren={
         <PageAgentPanel
-          title={`Neighborhood guide · ${city.shortName}`}
+          title="Learn your neighborhood"
           placeholder={placeholder}
           messages={pageAgents.neighborhoods.messages}
           loading={chatLoading}

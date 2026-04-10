@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useDashboard } from "@/components/dashboard/dashboard-provider";
 
 export default function TopBar() {
-  const { city, cities, setCitySlug, session } = useDashboard();
+  const router = useRouter();
+  const { city, cities, setCitySlug, resetAllState, session } = useDashboard();
   const username = "Ben Uribe";
   const [open, setOpen] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -19,6 +23,23 @@ export default function TopBar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    };
+  }, []);
+
+  function handleReset() {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      resetTimer.current = setTimeout(() => setConfirmReset(false), 3000);
+      return;
+    }
+    resetAllState();
+    setConfirmReset(false);
+    router.push("/dashboard");
+  }
 
   return (
     <header className="flex items-center">
@@ -69,6 +90,20 @@ export default function TopBar() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="ml-auto">
+        <button
+          type="button"
+          onClick={handleReset}
+          className={`rounded-lg px-3 py-1.5 text-caption transition-[color,background-color] duration-150 ease-out active:scale-[0.96] ${
+            confirmReset
+              ? "bg-negative/12 text-negative"
+              : "text-ink-muted hover:text-ink-secondary hover:bg-surface-hover"
+          }`}
+        >
+          {confirmReset ? "Confirm reset" : "Reset"}
+        </button>
       </div>
     </header>
   );

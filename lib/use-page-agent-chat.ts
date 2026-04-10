@@ -23,14 +23,14 @@ interface UsePageAgentChatArgs {
 
 function buildFallbackError(page: DashboardAgentPage) {
   if (page === "neighborhoods") {
-    return "I couldn't load the neighborhood guide just now. Start with the history and development sections on the left, and I can still help you compare the tradeoffs.";
+    return "couldn't load the neighborhood guide rn — start with the history and development sections on the left and i can still help you compare tradeoffs";
   }
 
   if (page === "conscious-move") {
-    return "I couldn't load the coaching thread just now. We can still work from the score breakdown and improvement levers on the left.";
+    return "couldn't load the coaching thread rn — we can still work from the score breakdown and improvement levers on the left tho";
   }
 
-  return "I couldn't load the discovery guide just now. The live sections on the left should still give you a solid starting point.";
+  return "couldn't load the discovery guide rn — the live sections on the left should still give you a solid starting point";
 }
 
 export function usePageAgentChat({
@@ -46,6 +46,14 @@ export function usePageAgentChat({
 }: UsePageAgentChatArgs) {
   const [loading, setLoading] = useState(false);
   const sentInitial = useRef(false);
+  const prevCityRef = useRef(citySlug);
+
+  useEffect(() => {
+    if (prevCityRef.current !== citySlug) {
+      prevCityRef.current = citySlug;
+      sentInitial.current = false;
+    }
+  }, [citySlug]);
 
   const sendRequest = useCallback(
     async (nextMessages: MovePlanMessage[]) => {
@@ -66,7 +74,7 @@ export function usePageAgentChat({
         throw new Error("Failed to load page agent");
       }
 
-      return (await response.json()) as { assistantMessage?: string };
+      return (await response.json()) as { assistantMessages?: string[] };
     },
     [citySlug, liveContent, page, profile, summary]
   );
@@ -88,14 +96,16 @@ export function usePageAgentChat({
 
       try {
         const data = await sendRequest(nextMessages);
+        const texts = data.assistantMessages?.length
+          ? data.assistantMessages.map((m) => m.trim())
+          : [buildFallbackError(page)];
         setMessages([
           ...nextMessages,
-          {
-            id: `assistant-${Date.now()}`,
-            role: "assistant",
-            content:
-              data.assistantMessage?.trim() || buildFallbackError(page),
-          },
+          ...texts.map((text, i) => ({
+            id: `assistant-${Date.now()}-${i}`,
+            role: "assistant" as const,
+            content: text,
+          })),
         ]);
       } catch {
         addMessage({
@@ -118,13 +128,16 @@ export function usePageAgentChat({
 
     sendRequest([])
       .then((data) => {
-        setMessages([
-          {
-            id: `assistant-init-${Date.now()}`,
-            role: "assistant",
-            content: data.assistantMessage?.trim() || buildFallbackError(page),
-          },
-        ]);
+        const texts = data.assistantMessages?.length
+          ? data.assistantMessages.map((m) => m.trim())
+          : [buildFallbackError(page)];
+        setMessages(
+          texts.map((text, i) => ({
+            id: `assistant-init-${Date.now()}-${i}`,
+            role: "assistant" as const,
+            content: text,
+          }))
+        );
       })
       .catch(() => {
         setMessages([

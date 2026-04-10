@@ -131,7 +131,7 @@ function EditableNumber({
               if (e.key === "Enter") commit();
               if (e.key === "Escape") setEditing(false);
             }}
-            className="w-full rounded-md bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[14px] leading-[18px] font-medium text-ink outline-none"
+            className="w-full rounded-md bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[14px] leading-[22px] font-medium text-ink outline-none"
           />
           {suffix && (
             <span className="text-[13px] text-ink-muted">{suffix}</span>
@@ -150,7 +150,7 @@ function EditableNumber({
       className="w-full text-left group"
     >
       <p className="text-[12px] leading-[20px] text-ink-muted">{label}</p>
-      <p className="text-[14px] leading-[18px] font-medium text-ink mt-0.5 transition-[color] duration-150 group-hover:text-accent">
+      <p className="text-[14px] leading-[22px] font-medium text-ink mt-0.5 transition-[color] duration-150 group-hover:text-accent">
         {display}
       </p>
     </button>
@@ -201,7 +201,7 @@ function EditableText({
             if (e.key === "Escape") setEditing(false);
           }}
           placeholder={placeholder}
-          className="mt-0.5 w-full rounded-md bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[14px] leading-[18px] font-medium text-ink outline-none placeholder:text-ink-muted/40"
+          className="mt-0.5 w-full rounded-md bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[14px] leading-[22px] font-medium text-ink outline-none placeholder:text-ink-muted/40"
         />
       </div>
     );
@@ -214,7 +214,7 @@ function EditableText({
       className="w-full text-left group"
     >
       <p className="text-[12px] leading-[20px] text-ink-muted">{label}</p>
-      <p className="text-[14px] leading-[18px] font-medium text-ink mt-0.5 transition-[color] duration-150 group-hover:text-accent">
+      <p className="text-[14px] leading-[22px] font-medium text-ink mt-0.5 transition-[color] duration-150 group-hover:text-accent">
         {value || <span className="text-ink-muted/40">{placeholder}</span>}
       </p>
     </button>
@@ -321,7 +321,7 @@ function StopRow({
       transition={{ type: "spring", duration: 0.35, bounce: 0, delay: index * 0.04 }}
     >
       {/* Row */}
-      <div className="group flex items-center gap-3 px-3.5 py-2.5">
+      <div className="group flex items-center gap-3 px-3.5 py-2">
         {/* Marker dot */}
         <div className="flex flex-col items-center gap-0">
           <div className="size-[10px] rounded-full bg-accent" />
@@ -340,7 +340,7 @@ function StopRow({
                 if (e.key === "Enter") commitPlace();
                 if (e.key === "Escape") setEditingPlace(false);
               }}
-              className="w-full rounded-md bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[14px] leading-[18px] font-medium text-ink outline-none"
+              className="w-full rounded-md bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[14px] leading-[22px] font-medium text-ink outline-none"
             />
           ) : (
             <button
@@ -348,7 +348,7 @@ function StopRow({
               onClick={() => setEditingPlace(true)}
               className="w-full text-left"
             >
-              <p className="text-[14px] leading-[18px] font-medium text-ink truncate">
+              <p className="text-[14px] leading-[22px] font-medium text-ink truncate">
                 {node.place}
               </p>
               <p className="text-[11px] leading-[15px] text-ink-muted mt-0">
@@ -524,7 +524,7 @@ function AddStopRow({
 
   if (adding) {
     return (
-      <div className="flex items-center gap-3 px-3.5 py-2.5">
+      <div className="flex items-center gap-3 px-3.5 py-2">
         <div className="size-[10px] rounded-full bg-accent opacity-40" />
         <input
           ref={inputRef}
@@ -539,7 +539,7 @@ function AddStopRow({
             if (e.key === "Escape") setAdding(false);
           }}
           placeholder="Place name..."
-          className="flex-1 bg-transparent text-[14px] leading-[18px] text-ink placeholder:text-ink-muted outline-none"
+          className="flex-1 bg-transparent text-[14px] leading-[22px] text-ink placeholder:text-ink-muted outline-none"
         />
       </div>
     );
@@ -549,7 +549,7 @@ function AddStopRow({
     <button
       type="button"
       onClick={() => setAdding(true)}
-      className="flex w-full items-center gap-3 px-3.5 py-2.5 transition-[opacity] duration-150 hover:opacity-80"
+      className="flex w-full items-center gap-3 px-3.5 py-2 transition-[opacity] duration-150 hover:opacity-80"
     >
       <div className="flex size-5 items-center justify-center rounded-full bg-accent">
         <svg
@@ -565,7 +565,7 @@ function AddStopRow({
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
       </div>
-      <span className="text-[14px] leading-[18px] text-accent">
+      <span className="text-[14px] leading-[22px] text-accent">
         Add stop
       </span>
     </button>
@@ -586,7 +586,7 @@ function LivingHistoryBuilder({
   onReorder: (from: number, to: number) => void;
 }) {
   return (
-    <div className="rounded-3xl bg-[rgba(255,255,255,0.04)] overflow-hidden">
+    <div className="rounded-3xl bg-[rgba(255,255,255,0.04)] overflow-hidden py-2.5">
       <AnimatePresence initial={false} mode="popLayout">
         {nodes.map((node, i) => (
           <StopRow
@@ -662,8 +662,16 @@ export default function ProfilePage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentInitial = useRef(false);
 
+  const prevCityRef = useRef(citySlug);
   const placeholder = useRotatingPlaceholder(PROFILE_STARTERS);
   const messages = profileChat.messages;
+
+  useEffect(() => {
+    if (prevCityRef.current !== citySlug) {
+      prevCityRef.current = citySlug;
+      sentInitial.current = false;
+    }
+  }, [citySlug]);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -723,13 +731,18 @@ export default function ProfilePage() {
         if (!res.ok) throw new Error("Failed");
         const data = await res.json();
 
-        const assistantMsg = {
-          id: `assistant-${Date.now()}`,
-          role: "assistant" as const,
-          content: data.assistantMessage,
-        };
+        const assistantTexts = data.assistantMessages as string[];
+        const assistantMsgs = assistantTexts.map(
+          (text: string, i: number) => ({
+            id: `assistant-${Date.now()}-${i}`,
+            role: "assistant" as const,
+            content: text,
+          })
+        );
 
-        addProfileChatMessage(assistantMsg);
+        for (const msg of assistantMsgs) {
+          addProfileChatMessage(msg);
+        }
 
         if (data.extractedProfile) {
           syncAnswersToProfile(data.extractedProfile, {
@@ -767,7 +780,7 @@ export default function ProfilePage() {
         if (data.extractedConcerns?.length) {
           setProfileChat({
             ...profileChat,
-            messages: [...allMessages, assistantMsg],
+            messages: [...allMessages, ...assistantMsgs],
             concerns: [
               ...new Set([
                 ...profileChat.concerns,
@@ -780,7 +793,7 @@ export default function ProfilePage() {
         addProfileChatMessage({
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: "Something went wrong. Try again.",
+          content: "something went wrong, try again",
         });
       } finally {
         setLoading(false);
@@ -844,17 +857,20 @@ export default function ProfilePage() {
     })
       .then((res) => res.json())
       .then((data) => {
-        addProfileChatMessage({
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: data.assistantMessage,
+        const texts = data.assistantMessages as string[];
+        texts.forEach((text: string, i: number) => {
+          addProfileChatMessage({
+            id: `assistant-${Date.now()}-${i}`,
+            role: "assistant",
+            content: text,
+          });
         });
       })
       .catch(() => {
         addProfileChatMessage({
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: "Couldn't start the conversation. Try refreshing.",
+          content: "couldn't start the conversation, try refreshing",
         });
       })
       .finally(() => setLoading(false));
@@ -1053,7 +1069,7 @@ export default function ProfilePage() {
 
         <div
           ref={scrollRef}
-          className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4"
+          className="flex flex-1 flex-col gap-1 overflow-y-auto px-5 py-4"
         >
           {messages.map((msg, i) => (
             <motion.div

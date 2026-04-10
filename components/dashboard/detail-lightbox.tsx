@@ -52,7 +52,7 @@ export function DetailLightbox({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <p className="text-[14px] leading-[18px] font-medium text-ink">
+                <p className="text-[14px] leading-[22px] font-medium text-ink">
                   {title}
                 </p>
                 {badge}

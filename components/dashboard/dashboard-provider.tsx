@@ -78,10 +78,11 @@ const DEFAULT_PAGE_AGENTS: Record<DashboardAgentPage, PageAgentState> = {
   resources: { messages: [] },
 };
 
-const MOVE_PLAN_VERSION = 2;
+const MOVE_PLAN_VERSION = 3;
 
 interface StoredDashboardState {
   citySlug: string;
+  chatCitySlug?: string;
   profile: DashboardProfile;
   livingHistory?: LivingHistory;
   profileChat?: ProfileChatState;
@@ -131,6 +132,7 @@ interface DashboardContextValue {
   setMapFocus: (focus: DashboardMapFocus) => void;
   clearMapFocus: () => void;
   resetMovePlan: () => void;
+  resetAllState: () => void;
   signOut: () => void;
 }
 
@@ -209,7 +211,11 @@ export function DashboardProvider({
       setLivingHistory(nextState.livingHistory);
     }
 
+    const chatCityMatch =
+      nextState?.chatCitySlug === nextState?.citySlug;
+
     if (
+      chatCityMatch &&
       nextState?.profileChat?.messages?.length &&
       nextState.movePlanVersion === MOVE_PLAN_VERSION
     ) {
@@ -217,13 +223,14 @@ export function DashboardProvider({
     }
 
     if (
+      chatCityMatch &&
       nextState?.movePlan &&
       nextState.movePlanVersion === MOVE_PLAN_VERSION
     ) {
       setMovePlanState({ ...DEFAULT_MOVE_PLAN, ...nextState.movePlan });
     }
 
-    if (nextState?.pageAgents) {
+    if (chatCityMatch && nextState?.pageAgents) {
       setPageAgents({
         neighborhoods: {
           ...DEFAULT_PAGE_AGENTS.neighborhoods,
@@ -254,6 +261,7 @@ export function DashboardProvider({
       STATE_KEY,
       JSON.stringify({
         citySlug,
+        chatCitySlug: citySlug,
         profile,
         livingHistory,
         profileChat,
@@ -324,6 +332,9 @@ export function DashboardProvider({
     if (!getCityBySlug(slug)) return;
     setCitySlugState(slug);
     setMapFocusState(null);
+    setProfileChatState({ messages: [], concerns: [] });
+    setMovePlanState(DEFAULT_MOVE_PLAN);
+    setPageAgents(DEFAULT_PAGE_AGENTS);
   }, []);
 
   const updateFinancial = useCallback((patch: Partial<UserFinancialProfile>) => {
@@ -478,6 +489,19 @@ export function DashboardProvider({
     setMovePlanState(DEFAULT_MOVE_PLAN);
   }, []);
 
+  const resetAllState = useCallback(() => {
+    setCitySlugState(DEFAULT_CITY_SLUG);
+    setProfile(DEFAULT_PROFILE);
+    setLivingHistory({ nodes: [] });
+    setProfileChatState({ messages: [], concerns: [] });
+    setMovePlanState(DEFAULT_MOVE_PLAN);
+    setPageAgents(DEFAULT_PAGE_AGENTS);
+    setMapFocusState(null);
+    setSummary(null);
+    setSummaryStatus("idle");
+    setAiEnhanced(false);
+  }, []);
+
   const signOut = useCallback(() => {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(SESSION_KEY);
@@ -527,6 +551,7 @@ export function DashboardProvider({
       setMapFocus,
       clearMapFocus,
       resetMovePlan,
+      resetAllState,
       signOut,
     }),
     [
@@ -547,6 +572,7 @@ export function DashboardProvider({
       reorderHistoryNodes,
       removeHistoryNode,
       resetPageAgent,
+      resetAllState,
       resetMovePlan,
       session,
       setMapFocus,

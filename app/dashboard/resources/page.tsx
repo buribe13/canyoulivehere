@@ -22,7 +22,7 @@ const STARTERS = [
 ];
 
 function ResourcesContent({ summary }: { summary: CityDashboardSummary }) {
-  const { city, citySlug, pageAgents, profile, setPageAgentMessages, addPageAgentMessage } =
+  const { citySlug, pageAgents, profile, setPageAgentMessages, addPageAgentMessage } =
     useDashboard();
 
   const placeholder = useRotatingPlaceholder(STARTERS);
@@ -56,7 +56,7 @@ function ResourcesContent({ summary }: { summary: CityDashboardSummary }) {
         <div className="space-y-12">
           <section>
             <h1 className="text-heading text-ink">{summary.resources.title}</h1>
-            <p className="mt-2 text-[14px] leading-[18px] text-ink-light">
+            <p className="mt-2 text-[14px] leading-[22px] text-ink-light">
               {summary.resources.narrative}
             </p>
           </section>
@@ -114,7 +114,7 @@ function ResourcesContent({ summary }: { summary: CityDashboardSummary }) {
       }
       rightChildren={
         <PageAgentPanel
-          title={`Resource guide · ${city.shortName}`}
+          title="Resource guide"
           placeholder={placeholder}
           messages={pageAgents.resources.messages}
           loading={chatLoading}

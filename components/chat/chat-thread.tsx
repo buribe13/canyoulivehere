@@ -23,7 +23,7 @@ interface ChatThreadProps {
 }
 
 interface ChatTurnResponse {
-  assistantMessage: string;
+  assistantMessages: string[];
   answers: Partial<UserAnswers>;
   complete: boolean;
   options?: ChatOption[];
@@ -99,17 +99,19 @@ export default function ChatThread({
           return;
         }
 
-        const assistantMessage: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: data.assistantMessage,
-          options: data.options,
-          inputType: data.inputType ?? undefined,
-          step: data.step,
-          totalSteps: data.totalSteps,
-        };
+        const assistantMsgs: ChatMessage[] = data.assistantMessages.map(
+          (text, i) => ({
+            id: `assistant-${Date.now()}-${i}`,
+            role: "assistant" as const,
+            content: text,
+            options: i === data.assistantMessages.length - 1 ? data.options : undefined,
+            inputType: i === data.assistantMessages.length - 1 ? (data.inputType ?? undefined) : undefined,
+            step: data.step,
+            totalSteps: data.totalSteps,
+          })
+        );
 
-        setMessages([...nextMessages, assistantMessage]);
+        setMessages([...nextMessages, ...assistantMsgs]);
         setAnswers(data.answers);
         setOptions(data.options);
         setInputType(data.inputType);
@@ -141,7 +143,7 @@ export default function ChatThread({
             id: `assistant-error-${Date.now()}`,
             role: "assistant",
             content:
-              "I hit a snag while reading your answer. Try sending that again and I’ll keep going.",
+              "hit a snag reading your answer, try sending that again",
           },
         ]);
       } finally {
@@ -249,14 +251,15 @@ export default function ChatThread({
 
   return (
     <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 flex flex-col gap-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 flex flex-col">
         <AnimatePresence>
-          {messages.map((msg) => (
+          {messages.map((msg, i) => (
             <ChatBubble
               key={msg.id}
               role={msg.role}
               step={msg.step}
               totalSteps={msg.totalSteps}
+              className={i === 0 ? "" : messages[i - 1].role !== msg.role ? "mt-5" : "mt-1"}
             >
               {msg.content}
             </ChatBubble>

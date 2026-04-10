@@ -48,7 +48,7 @@ export default function PageAgentPanel({
 
       <div
         ref={scrollRef}
-        className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4"
+        className="flex flex-1 flex-col overflow-y-auto px-5 py-4"
       >
         {messages.map((message, index) => (
           <motion.div
@@ -65,7 +65,7 @@ export default function PageAgentPanel({
               message.role === "user"
                 ? "self-end bg-surface text-ink"
                 : "self-start bg-accent text-white"
-            }`}
+            }${index === 0 ? "" : messages[index - 1].role !== message.role ? " mt-5" : " mt-1"}`}
           >
             {message.content}
           </motion.div>

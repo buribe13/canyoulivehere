@@ -79,10 +79,18 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentInitial = useRef(false);
+  const prevCityRef = useRef(citySlug);
 
   const placeholder = useRotatingPlaceholder(PLAN_STARTERS);
 
   const messages = movePlan.messages;
+
+  useEffect(() => {
+    if (prevCityRef.current !== citySlug) {
+      prevCityRef.current = citySlug;
+      sentInitial.current = false;
+    }
+  }, [citySlug]);
   const answers = movePlan.answers;
   const complete = movePlan.complete;
 
@@ -201,13 +209,15 @@ export default function ChatPage() {
         if (!res.ok) throw new Error("Failed");
         const data = await res.json();
 
-        const assistantMsg: MovePlanMessage = {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: data.assistantMessage,
-        };
+        const assistantMsgs: MovePlanMessage[] = (
+          data.assistantMessages as string[]
+        ).map((text, i) => ({
+          id: `assistant-${Date.now()}-${i}`,
+          role: "assistant" as const,
+          content: text,
+        }));
 
-        setMovePlanMessages([...next, assistantMsg]);
+        setMovePlanMessages([...next, ...assistantMsgs]);
         const newAnswers = data.answers ?? {};
         setMovePlanAnswers(newAnswers);
         setMovePlanComplete(Boolean(data.complete));
@@ -234,7 +244,7 @@ export default function ChatPage() {
         addMovePlanMessage({
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: "Something went wrong. Try again.",
+          content: "something went wrong, try again",
         });
       } finally {
         setLoading(false);
@@ -290,10 +300,13 @@ export default function ChatPage() {
             content: initialPrompt,
           });
         }
-        msgs.push({
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: data.assistantMessage,
+        const assistantTexts = data.assistantMessages as string[];
+        assistantTexts.forEach((text: string, i: number) => {
+          msgs.push({
+            id: `assistant-${Date.now()}-${i}`,
+            role: "assistant",
+            content: text,
+          });
         });
         setMovePlanMessages(msgs);
         setMovePlanAnswers(data.answers ?? {});
@@ -303,7 +316,7 @@ export default function ChatPage() {
           {
             id: `error-${Date.now()}`,
             role: "assistant",
-            content: "Couldn't start the conversation. Try refreshing.",
+            content: "couldn't start the conversation, try refreshing",
           },
         ]);
       })
@@ -348,7 +361,7 @@ export default function ChatPage() {
 
         <div
           ref={scrollRef}
-          className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4"
+          className="flex flex-1 flex-col gap-1 overflow-y-auto px-5 py-4"
         >
           {messages.map((msg) => (
             <div
