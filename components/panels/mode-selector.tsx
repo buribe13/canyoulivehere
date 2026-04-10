@@ -21,8 +21,8 @@ const modes: { mode: Mode; title: string; desc: string }[] = [
 ];
 
 const item = {
-  hidden: { opacity: 0, y: 12, filter: "blur(4px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export default function ModeSelector({ onSelect }: ModeSelectorProps) {
@@ -43,8 +43,8 @@ export default function ModeSelector({ onSelect }: ModeSelectorProps) {
           className="w-full rounded-xl px-5 py-4 text-left cursor-pointer bg-surface transition-[background-color,box-shadow] duration-150 ease-out hover:bg-surface-hover"
           style={{ boxShadow: "var(--shadow-border)" }}
         >
-          <p className="text-body text-ink">{m.title}</p>
-          <p className="text-caption text-ink-muted mt-0.5">{m.desc}</p>
+          <p className="text-body text-ink mb-0">{m.title}</p>
+          <p className="text-subline text-ink-muted mt-0">{m.desc}</p>
         </motion.button>
       ))}
     </motion.div>

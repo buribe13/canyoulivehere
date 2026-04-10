@@ -22,9 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="relative min-h-full flex flex-col">
-        <div style={{ isolation: "isolate" }} className="flex-1 flex flex-col">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

@@ -54,7 +54,7 @@ export default function CostBreakdownPanel({
       animate={{ y: 0 }}
       exit={{ y: "100%", transition: { duration: 0.25, ease: "easeIn" } }}
       transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
-      className="fixed bottom-3 left-3 right-3 z-30 glass rounded-2xl sm:right-[424px]"
+      className="fixed bottom-3 left-[218px] right-3 z-30 glass rounded-2xl sm:right-[390px]"
     >
       <div className="max-w-2xl mx-auto px-6 py-5">
         <div className="flex items-center justify-between mb-3">

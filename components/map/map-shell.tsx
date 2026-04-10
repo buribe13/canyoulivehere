@@ -7,8 +7,8 @@ import { CITIES } from "@/lib/cities";
 import { MAP_STYLE, INITIAL_VIEW } from "@/lib/mapbox";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
-const DOT_COLOR = "#E8913A";
-const DOT_GLOW = "rgba(232, 145, 58, 0.35)";
+const DOT_COLOR = "#007aff";
+const DOT_GLOW = "rgba(0, 122, 255, 0.35)";
 
 interface MapShellProps {
   onCitySelect: (slug: string) => void;
@@ -71,7 +71,7 @@ export default function MapShell({ onCitySelect, selectedCity }: MapShellProps) 
 
       el.addEventListener("mouseenter", () => {
         dot.style.transform = "scale(1.4)";
-        dot.style.boxShadow = `0 0 0 3px rgba(232,145,58,0.5), 0 0 12px rgba(232,145,58,0.2)`;
+        dot.style.boxShadow = `0 0 0 3px rgba(0,122,255,0.5), 0 0 12px rgba(0,122,255,0.2)`;
       });
       el.addEventListener("mouseleave", () => {
         dot.style.transform = "scale(1)";
@@ -106,18 +106,26 @@ export default function MapShell({ onCitySelect, selectedCity }: MapShellProps) 
       dot.style.width = active ? "14px" : "10px";
       dot.style.height = active ? "14px" : "10px";
       dot.style.boxShadow = active
-        ? `0 0 0 3px rgba(232,145,58,0.6), 0 0 16px rgba(232,145,58,0.25)`
+        ? `0 0 0 3px rgba(0,122,255,0.6), 0 0 16px rgba(0,122,255,0.25)`
         : `0 0 0 2px ${DOT_GLOW}`;
     });
-    if (selectedCity) flyToCity(selectedCity);
+    if (selectedCity) {
+      flyToCity(selectedCity);
+    } else if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: INITIAL_VIEW.center,
+        zoom: INITIAL_VIEW.zoom,
+        duration: 1400,
+      });
+    }
   }, [selectedCity, flyToCity]);
 
   if (!MAPBOX_TOKEN) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="glass max-w-sm rounded-2xl p-8 text-center">
-          <p className="text-subheading text-ink mb-2">Map Setup</p>
-          <p className="text-body-sm text-ink-muted">
+          <p className="text-subheading text-ink mb-0">Map Setup</p>
+          <p className="text-subline-md text-ink-muted mt-0">
             Add <code className="rounded-md bg-surface px-1.5 py-0.5 text-caption">NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code> to
             your <code className="rounded-md bg-surface px-1.5 py-0.5 text-caption">.env.local</code> file.
           </p>

@@ -8,8 +8,8 @@ interface ComingSoonPanelProps {
 }
 
 const item = {
-  hidden: { opacity: 0, y: 12, filter: "blur(4px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export default function ComingSoonPanel({ city }: ComingSoonPanelProps) {
@@ -24,19 +24,19 @@ export default function ComingSoonPanel({ city }: ComingSoonPanelProps) {
         variants={item}
         transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
         className="w-8 h-8 rounded-full mb-4"
-        style={{ backgroundColor: "var(--accent)", opacity: 0.6 }}
+        style={{ backgroundColor: "var(--accent-brand)", opacity: 0.6 }}
       />
       <motion.p
         variants={item}
         transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
-        className="text-subheading text-ink mb-1"
+        className="text-subheading text-ink mb-0"
       >
         Coming Soon
       </motion.p>
       <motion.p
         variants={item}
         transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
-        className="text-body-sm text-ink-muted max-w-xs"
+        className="text-subline-md text-ink-muted mt-0 max-w-xs"
       >
         We&apos;re crunching the numbers for {city.name}. Check back soon.
       </motion.p>

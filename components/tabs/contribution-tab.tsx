@@ -68,8 +68,8 @@ export default function ContributionTab({ citySlug }: ContributionTabProps) {
         className="rounded-xl bg-surface p-6 my-4 text-center"
         style={{ border: "1px solid var(--border)" }}
       >
-        <p className="text-heading text-ink mb-2">Your Pledge</p>
-        <p className="text-body-sm text-ink-muted mb-4">
+        <p className="text-heading text-ink mb-0">Your Pledge</p>
+        <p className="text-subline-lg text-ink-muted mt-0 mb-4">
           You&apos;re committed to making this city better.
         </p>
         <div className="flex flex-col gap-2">
@@ -108,12 +108,12 @@ export default function ContributionTab({ citySlug }: ContributionTabProps) {
                 }`}
                 style={{
                   border: isSelected
-                    ? "1.5px solid var(--accent)"
+                    ? "1.5px solid var(--accent-brand)"
                     : "1px solid var(--border)",
                 }}
               >
-                <p className="text-body-sm text-ink">{item.title}</p>
-                <p className="text-caption text-ink-muted mt-0.5">
+                <p className="text-body-sm text-ink mb-0">{item.title}</p>
+                <p className="text-subline-sm text-ink-muted mt-0">
                   {item.description}
                 </p>
               </motion.button>
@@ -127,7 +127,7 @@ export default function ContributionTab({ citySlug }: ContributionTabProps) {
           animate={{ opacity: 1, y: 0 }}
           onClick={() => setPledged(true)}
           className="mt-4 w-full rounded-lg py-3 text-body-sm text-ink transition-[opacity] duration-150 ease-out hover:opacity-90 cursor-pointer"
-          style={{ backgroundColor: "var(--accent)" }}
+          style={{ backgroundColor: "var(--accent-brand)" }}
         >
           Make my pledge ({selected.size}/3)
         </motion.button>

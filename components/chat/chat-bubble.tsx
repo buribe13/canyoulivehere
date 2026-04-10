@@ -27,20 +27,20 @@ export default function ChatBubble({
       className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}
     >
       <div
-        className={`max-w-[85%] rounded-xl px-4 py-3 ${
+        className={`max-w-[85%] rounded-[10px] px-3.5 py-2.5 ${
           isAssistant
-            ? "bg-surface text-ink"
+            ? "text-ink"
             : "text-ink"
         }`}
-        style={
-          isAssistant
-            ? { border: "1px solid var(--border)" }
-            : { backgroundColor: "var(--accent)" }
-        }
+        style={{
+          background: isAssistant
+            ? "rgba(255, 255, 255, 0.06)"
+            : "var(--accent-brand)",
+        }}
       >
-        <p className="text-body-sm">{children}</p>
+        <p className="text-body-sm mb-0">{children}</p>
         {step !== undefined && totalSteps !== undefined && (
-          <p className="text-fine text-ink-muted mt-1.5">
+          <p className="text-subline-sm text-ink-muted mt-0">
             {step} of {totalSteps}
           </p>
         )}
@@ -58,8 +58,8 @@ export function TypingIndicator() {
       className="flex justify-start"
     >
       <div
-        className="rounded-xl px-4 py-3 bg-surface flex gap-1 items-center"
-        style={{ border: "1px solid var(--border)" }}
+        className="rounded-[10px] px-3.5 py-2.5 flex gap-1 items-center"
+        style={{ background: "rgba(255, 255, 255, 0.06)" }}
       >
         {[0, 1, 2].map((i) => (
           <motion.span

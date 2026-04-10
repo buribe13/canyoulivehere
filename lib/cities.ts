@@ -6,7 +6,7 @@ export const CITIES: City[] = [
     slug: "los-angeles",
     tagline: "The City of Angels",
     coords: [-118.2437, 34.0522],
-    accent: "var(--accent-los-angeles)",
+    accent: "var(--accent-brand)",
     available: true,
   },
   {
@@ -14,7 +14,7 @@ export const CITIES: City[] = [
     slug: "new-york",
     tagline: "The City That Never Sleeps",
     coords: [-74.006, 40.7128],
-    accent: "var(--accent-new-york)",
+    accent: "var(--accent-brand)",
     available: false,
   },
   {
@@ -22,7 +22,7 @@ export const CITIES: City[] = [
     slug: "chicago",
     tagline: "The Windy City",
     coords: [-87.6298, 41.8781],
-    accent: "var(--accent-chicago)",
+    accent: "var(--accent-brand)",
     available: false,
   },
   {
@@ -30,7 +30,7 @@ export const CITIES: City[] = [
     slug: "san-francisco",
     tagline: "The Golden Gate City",
     coords: [-122.4194, 37.7749],
-    accent: "var(--accent-san-francisco)",
+    accent: "var(--accent-brand)",
     available: false,
   },
   {
@@ -38,7 +38,7 @@ export const CITIES: City[] = [
     slug: "boston",
     tagline: "The Cradle of Liberty",
     coords: [-71.0589, 42.3601],
-    accent: "var(--accent-boston)",
+    accent: "var(--accent-brand)",
     available: false,
   },
 ];

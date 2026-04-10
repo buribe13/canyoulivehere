@@ -57,8 +57,8 @@ export default function CultureTab({ citySlug }: CultureTabProps) {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-label text-accent">{card.tag}</span>
           </div>
-          <p className="text-subheading text-ink mb-1">{card.name}</p>
-          <p className="text-body-sm text-ink-light">{card.story}</p>
+          <p className="text-subheading text-ink mb-0">{card.name}</p>
+          <p className="text-subline-md text-ink-light mt-0">{card.story}</p>
           {card.link && (
             <a
               href={card.link}
